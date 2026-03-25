@@ -30,6 +30,12 @@
                     Cadastrar Usuário
                 </a>
             </li>
+            <li class="sidebar__item">
+                <a href="<?= BASE_URL ?>/admin/configuracoes"
+                   class="sidebar__link <?= ($subRoute === 'configuracoes') ? 'sidebar__link--active' : '' ?>">
+                    Configurações
+                </a>
+            </li>
             <?php endif; ?>
 
         </ul>

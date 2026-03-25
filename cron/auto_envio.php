@@ -23,24 +23,35 @@ $today = (clone $now)->setTime(0, 0, 0);
 
 echo '[' . $now->format('Y-m-d H:i:s') . '] Iniciando verificação de auto-envio.' . PHP_EOL;
 
-// Só executa na quinta-feira (N=4) após as 19h
-if ($now->format('N') != 4) {
-    echo 'Hoje não é quinta-feira (' . $now->format('l') . '). Nada a fazer.' . PHP_EOL;
+$pdo    = getDbConnection();
+$config = getAppConfig($pdo);
+
+$disparoDia  = (int) $config['disparo_dia_semana'];           // 1=seg … 7=dom
+$disparoHora = $config['disparo_hora'];                        // "HH:MM"
+
+// Verifica se hoje é o dia configurado
+if ((int) $now->format('N') !== $disparoDia) {
+    echo 'Hoje não é o dia configurado para disparo (' . $now->format('l') . '). Nada a fazer.' . PHP_EOL;
     exit;
 }
 
-if ((int) $now->format('H') < 19) {
-    echo 'Ainda não são 19h (' . $now->format('H:i') . '). Nada a fazer.' . PHP_EOL;
+// Verifica se já passou do horário configurado
+[$hConf, $mConf] = array_map('intval', explode(':', $disparoHora . ':00'));
+$minAgora = (int) $now->format('H') * 60 + (int) $now->format('i');
+$minConf  = $hConf * 60 + $mConf;
+
+if ($minAgora < $minConf) {
+    echo 'Ainda não são ' . $disparoHora . ' (' . $now->format('H:i') . '). Nada a fazer.' . PHP_EOL;
     exit;
 }
 
-// Calcula a sexta-feira desta semana (amanhã)
-$friday    = (clone $today)->modify('+1 day');
+// Calcula a próxima sexta-feira a partir do dia de disparo
+$offsetParaSexta = (5 - $disparoDia + 7) % 7;
+if ($offsetParaSexta === 0) $offsetParaSexta = 7;
+$friday    = (clone $today)->modify("+{$offsetParaSexta} day");
 $fridayKey = $friday->format('Y-m-d');
 
 echo 'Verificando treino da sexta-feira: ' . $fridayKey . PHP_EOL;
-
-$pdo = getDbConnection();
 
 // Verifica se já foi encerrado
 $stmt = $pdo->prepare("SELECT 1 FROM treinos_encerrados WHERE data_treino = ? LIMIT 1");

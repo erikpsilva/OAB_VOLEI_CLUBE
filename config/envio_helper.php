@@ -13,10 +13,31 @@
  */
 
 define('LIMITE_VAGAS',    30);
-define('EMAIL_ADVOGADA',  'erikprimao@gmail.com');
-define('EMAIL_ESPERIA',   'erikpsilva@gmail.com');
 define('EMAIL_FROM_NAME', 'OAB Vôlei Clube');
 define('EMAIL_FROM_ADDR', 'noreply@oabvoleiclube.com.br');
+
+/**
+ * Lê as configurações do sistema do banco de dados,
+ * com fallback para valores padrão caso a tabela ainda não exista.
+ */
+function getAppConfig(PDO $pdo): array
+{
+    $defaults = [
+        'email_admin'        => 'erikprimao@gmail.com',
+        'email_esperia'      => 'erikpsilva@gmail.com',
+        'disparo_dia_semana' => '4',
+        'disparo_hora'       => '19:00',
+    ];
+    try {
+        $stmt = $pdo->query("SELECT chave, valor FROM app_configuracoes");
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $defaults[$row['chave']] = $row['valor'];
+        }
+    } catch (Exception $e) {
+        // tabela ainda não criada — usa defaults
+    }
+    return $defaults;
+}
 
 /**
  * Envia os emails de confirmação para advogada e clube,
@@ -29,6 +50,11 @@ define('EMAIL_FROM_ADDR', 'noreply@oabvoleiclube.com.br');
  */
 function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): array
 {
+    // ── Lê configurações do banco ────────────────────────────────
+    $config       = getAppConfig($pdo);
+    $emailAdmin   = $config['email_admin'];
+    $emailEsperia = $config['email_esperia'];
+
     // ── Busca confirmados ─────────────────────────────────────────
     $stmt = $pdo->prepare("
         SELECT j.nome_completo, j.cpf, j.telefone
@@ -58,7 +84,7 @@ function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): ar
 
     $htmlAdv = _buildEmail($dataLonga, $listaAdvogada, 'advogada');
     $okAdv   = _sendEmail(
-        EMAIL_ADVOGADA,
+        $emailAdmin,
         'OAB Vôlei Clube — Confirmações de Presença — ' . $dataLonga,
         $htmlAdv
     );
@@ -74,7 +100,7 @@ function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): ar
 
     $htmlEsp = _buildEmail($dataLonga, $listaEsperia, 'esperia');
     $okEsp   = _sendEmail(
-        EMAIL_ESPERIA,
+        $emailEsperia,
         'OAB Vôlei Clube — Lista Oficial de Presença — ' . $dataLonga,
         $htmlEsp
     );
