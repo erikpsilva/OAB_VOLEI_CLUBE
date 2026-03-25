@@ -127,6 +127,9 @@ $canSend  = ($nivel === 'admin' || $nivel === 'editor');
             <p class="confModal__vazio">Carregando...</p>
         </div>
         <div class="confModal__footer">
+            <button class="btn btn--gray" id="btnImprimir" title="Abrir lista para impressão">
+                Imprimir
+            </button>
             <button class="btn btn--primary"
                     id="btnEnviar"
                     <?= !$canSend ? 'disabled' : '' ?>
@@ -212,6 +215,12 @@ $(document).ready(function () {
         }).fail(function () {
             $('#confModalBody').html('<p class="confModal__vazio">Erro ao carregar dados.</p>');
         });
+    });
+
+    // ── Botão Imprimir ────────────────────────────────────────
+    $('#btnImprimir').on('click', function () {
+        if (!currentDate) return;
+        window.open(ADMIN_BASE_URL + '/imprimir?data=' + currentDate, '_blank');
     });
 
     // ── Botão Enviar ──────────────────────────────────────────
