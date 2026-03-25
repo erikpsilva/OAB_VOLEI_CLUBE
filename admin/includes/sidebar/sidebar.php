@@ -16,6 +16,13 @@
                 </a>
             </li>
 
+            <li class="sidebar__item">
+                <a href="<?= BASE_URL ?>/admin/confirmacoes"
+                   class="sidebar__link <?= ($subRoute === 'confirmacoes') ? 'sidebar__link--active' : '' ?>">
+                    Confirmações
+                </a>
+            </li>
+
             <?php if ($_SESSION['usuario']['nivel_acesso'] === 'admin'): ?>
             <li class="sidebar__item">
                 <a href="<?= BASE_URL ?>/admin/cadastrarusuario"

@@ -1,7 +1,7 @@
 <?php
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'oab_volei_clube');
+define('DB_NAME', 'oab_bd');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 

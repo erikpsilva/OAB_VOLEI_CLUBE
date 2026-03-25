@@ -1,0 +1,46 @@
+.cadastroLayout {
+    padding: 40px 0;
+    background-color: #f4f6f9;
+    min-height: calc(100vh - 92px - 53px);
+}
+
+.cadastro {
+    h2 {
+        font-size: @title-size;
+        font-weight: @bold;
+        color: @primary;
+        margin-bottom: 24px;
+
+        span {
+            color: @secundary;
+        }
+    }
+
+    &__success {
+        display: none;
+        background-color: @white;
+        border-left: 4px solid #28a745;
+        .shadow;
+        .radius(8px);
+        padding: 30px;
+        margin-top: 24px;
+        text-align: center;
+
+        &__msg {
+            font-size: 18px;
+            font-weight: @bold;
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+
+        &__redirect {
+            font-size: 14px;
+            color: @color-font-sub;
+
+            span {
+                font-weight: @bold;
+                color: @primary;
+            }
+        }
+    }
+}

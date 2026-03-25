@@ -1,0 +1,240 @@
+.calendarioLayout {
+    padding: 40px 0 60px;
+    background-color: #f4f6f9;
+    min-height: calc(100vh - 92px - 53px);
+}
+
+.calendario {
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 32px;
+
+        h2 {
+            font-size: @title-size;
+            font-weight: @bold;
+            color: @primary;
+            margin: 0;
+
+            span {
+                color: @secundary;
+            }
+        }
+    }
+
+    &__legenda {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+
+        &__item {
+            font-size: 12px;
+            font-weight: @semi-bold;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: @white;
+
+            &.--concluido    { background-color: @green; }
+            &.--em_curso     { background-color: @orange; }
+            &.--disponivel   { background-color: @secundary; }
+            &.--lotado       { background-color: @orange; }
+            &.--encerrado    { background-color: @encerrado; }
+            &.--indisponivel { background-color: @tertiary; }
+            &.--feriado      { background-color: @purple; }
+        }
+    }
+
+    &__dica {
+        font-size: 13px;
+        color: @color-font-sub;
+        margin-bottom: 24px;
+
+        strong {
+            color: @primary;
+        }
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 16px;
+    }
+}
+
+.calendarioBox {
+    background-color: @white;
+    border-radius: 10px;
+    padding: 20px 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border-top: 4px solid @borderColor;
+    cursor: not-allowed;
+    .transition(0.2s transform);
+
+    &:hover {
+        transform: translateY(-3px);
+    }
+
+    &.--concluido    { border-top-color: @green; }
+    &.--em_curso     { border-top-color: @orange; }
+    &.--disponivel   { border-top-color: @secundary; }
+    &.--lotado       { border-top-color: @orange; }
+    &.--encerrado    { border-top-color: @encerrado; }
+    &.--indisponivel { border-top-color: @tertiary; }
+    &.--feriado      { border-top-color: @purple; }
+
+    &.--clicavel {
+        cursor: pointer !important;
+
+        &:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(11, 60, 117, 0.18);
+        }
+    }
+
+    &__date {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 6px;
+
+        &__day {
+            font-size: 36px;
+            font-weight: @bold;
+            color: @primary;
+            line-height: 1;
+        }
+
+        &__month {
+            font-size: 14px;
+            font-weight: @semi-bold;
+            color: @color-font-sub;
+            text-transform: uppercase;
+        }
+    }
+
+    &__weekday {
+        font-size: 12px;
+        color: @color-font-sub;
+        margin-bottom: 6px;
+    }
+
+    &__holiday {
+        font-size: 11px;
+        color: @purple;
+        font-weight: @semi-bold;
+        margin-bottom: 8px;
+        line-height: 1.3;
+    }
+
+    &__status {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: @bold;
+        padding: 3px 10px;
+        border-radius: 20px;
+        color: @white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        .--concluido &    { background-color: @green; }
+        .--em_curso &     { background-color: @orange; }
+        .--disponivel &   { background-color: @secundary; }
+        .--lotado &       { background-color: @orange; }
+        .--encerrado &    { background-color: @encerrado; }
+        .--indisponivel & { background-color: @tertiary; }
+        .--feriado &      { background-color: @purple; }
+    }
+}
+
+// MODAL
+.confirmModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+
+    &.--open {
+        display: flex;
+    }
+
+    &__box {
+        background: @white;
+        border-radius: 10px;
+        padding: 36px;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+
+    &__title {
+        font-size: 18px;
+        font-weight: @bold;
+        color: @primary;
+        margin-bottom: 14px;
+    }
+
+    &__text {
+        font-size: 14px;
+        color: @color-font;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    &__check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: @semi-bold;
+        color: @color-font;
+        cursor: pointer;
+        margin-bottom: 28px;
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: @primary;
+            cursor: pointer;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    &__btn {
+        padding: 10px 24px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: @bold;
+        border: none;
+        cursor: pointer;
+        .transition(0.2s background-color);
+
+        &.--cancelar {
+            background-color: @lightgray;
+            color: @color-font;
+
+            &:hover { background-color: darken(@lightgray, 10%); }
+        }
+
+        &.--enviar {
+            background-color: @primary;
+            color: @white;
+
+            &:hover { background-color: darken(@primary, 8%); }
+        }
+    }
+}

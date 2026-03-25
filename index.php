@@ -2,6 +2,8 @@
 
 define('ROOT', __DIR__);
 
+if (session_status() === PHP_SESSION_NONE) session_start();
+
 // Detecta ambiente
 if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false) {
     define('BASE_URL', 'http://localhost/OAB_VOLEI_CLUBE');

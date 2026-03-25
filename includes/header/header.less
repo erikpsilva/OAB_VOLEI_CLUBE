@@ -1,3 +1,61 @@
 .header {
-  
+    background-color: @primary;
+    padding: 10px 0;
+
+    .row {
+        align-items: center;
+    }
+
+    &__logo {
+        display: flex;
+        align-items: center;
+
+        img {
+            height: 60px;
+            width: auto;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    &__user {
+        color: @white;
+        font-size: 14px;
+        font-weight: @semi-bold;
+        margin-right: 12px;
+    }
+
+    &__btn {
+        background-color: @white;
+        color: @primary;
+        font-weight: @bold;
+        font-size: 14px;
+        padding: 10px 24px;
+        border-radius: 4px;
+        .transition;
+
+        &:hover {
+            background-color: @secundary;
+            color: @primary;
+        }
+
+        &--sair {
+            background-color: transparent;
+            border: 1.5px solid @white;
+            color: @white;
+
+            &:hover {
+                background-color: @white;
+                color: @primary;
+            }
+        }
+    }
+
+    .noShow {
+        display: none;
+    }
 }

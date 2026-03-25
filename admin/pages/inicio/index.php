@@ -67,6 +67,16 @@ $recentes = $pdo->query("SELECT nome_completo, email, nivel_acesso, created_at F
                 </div>
             </div>
 
+            <!-- Atalhos rápidos -->
+            <div class="row adminInicio__atalhos">
+                <div class="col-md-3 col-6">
+                    <a href="<?= BASE_URL ?>/admin/confirmacoes" class="dashAtalho">
+                        <span class="dashAtalho__label">Atalho rápido</span>
+                        <span class="dashAtalho__title">Confirmações</span>
+                    </a>
+                </div>
+            </div>
+
             <!-- Perfil + Últimos usuários -->
             <div class="row">
 

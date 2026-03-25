@@ -1,0 +1,359 @@
+.confLayout {
+    padding: 30px 25px 60px;
+    background-color: #f5f6fa;
+    min-height: calc(100vh - 60px);
+}
+
+.confHeader {
+    margin-bottom: 24px;
+
+    h2 {
+        font-size: 22px;
+        font-weight: @bold;
+        color: #333;
+        margin-bottom: 4px;
+
+        span { color: @primary; }
+    }
+
+    &__sub {
+        font-size: 13px;
+        color: @colorFont;
+        opacity: 0.7;
+    }
+}
+
+.confFiltro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+
+    &__toggle {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        cursor: pointer;
+
+        input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+
+            &:checked + .confFiltro__slider {
+                background-color: @primary;
+
+                &::before {
+                    transform: translateX(20px);
+                }
+            }
+        }
+    }
+
+    &__slider {
+        position: absolute;
+        inset: 0;
+        background-color: @borderColor;
+        border-radius: 24px;
+        .transition(0.3s background-color);
+
+        &::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            top: 3px;
+            background-color: @white;
+            border-radius: 50%;
+            .transition(0.3s transform);
+        }
+    }
+
+    &__label {
+        font-size: 13px;
+        font-weight: @semiBold;
+        color: @colorFont;
+        cursor: pointer;
+    }
+}
+
+.confGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+
+    .confCard.--passado {
+        display: none;
+    }
+
+    &.--mostrar-passados {
+        .confCard.--passado {
+            display: flex;
+        }
+    }
+}
+
+.confCard {
+    background: @white;
+    border-radius: 10px;
+    border-top: 4px solid @borderColor;
+    padding: 18px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    .shadow;
+    .transition(0.2s transform);
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+    }
+
+    &.--destaque {
+        border-top-color: @primary;
+        background-color: #f0faf8;
+    }
+
+    &.--passado {
+        border-top-color: @borderColor;
+        opacity: 0.75;
+    }
+
+    &.--encerrado {
+        border-top-color: #546e7a;
+        opacity: 0.8;
+    }
+
+    &__date {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 6px;
+
+        &__dia {
+            font-size: 36px;
+            font-weight: @bold;
+            color: @primary;
+            line-height: 1;
+        }
+
+        &__mes {
+            font-size: 12px;
+            color: @colorFont;
+            opacity: 0.7;
+            text-transform: uppercase;
+            font-weight: @semiBold;
+            margin-top: 2px;
+        }
+    }
+
+    &__weekday {
+        font-size: 11px;
+        color: @colorFont;
+        opacity: 0.55;
+        margin-bottom: 10px;
+    }
+
+    &__count {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        &__num {
+            font-size: 22px;
+            font-weight: @bold;
+            color: @primary;
+            line-height: 1;
+        }
+
+        &__label {
+            font-size: 10px;
+            color: @colorFont;
+            opacity: 0.6;
+            text-transform: uppercase;
+            font-weight: @semiBold;
+            margin-top: 2px;
+        }
+    }
+
+    &__badge {
+        margin-top: 10px;
+        font-size: 9px;
+        font-weight: @bold;
+        background-color: @primary;
+        color: @white;
+        padding: 2px 8px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+
+        &.--lotado {
+            background-color: @error;
+        }
+
+        &.--encerrado {
+            background-color: #546e7a;
+        }
+    }
+}
+
+// ── MODAL ──────────────────────────────────────────────────────
+.confModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+
+    &.--open {
+        display: flex;
+    }
+
+    &__box {
+        background: @white;
+        border-radius: 10px;
+        padding: 0;
+        width: 100%;
+        max-width: 520px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        .shadow;
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid @borderColor;
+        flex-shrink: 0;
+    }
+
+    &__title {
+        font-size: 16px;
+        font-weight: @bold;
+        color: #333;
+        margin: 0;
+
+        span { color: @primary; }
+    }
+
+    &__close {
+        background: none;
+        border: none;
+        font-size: 22px;
+        line-height: 1;
+        color: @colorFont;
+        cursor: pointer;
+        padding: 0 4px;
+        opacity: 0.6;
+
+        &:hover { opacity: 1; }
+    }
+
+    &__body {
+        overflow-y: auto;
+        flex: 1;
+        padding: 16px 24px;
+    }
+
+    &__vazio {
+        text-align: center;
+        padding: 30px 0;
+        color: @colorFont;
+        font-size: 13px;
+        opacity: 0.7;
+    }
+
+    &__footer {
+        padding: 16px 24px;
+        border-top: 1px solid @borderColor;
+        display: flex;
+        justify-content: flex-end;
+        flex-shrink: 0;
+    }
+}
+
+.confTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+        color: @colorFont;
+        font-size: 11px;
+        font-weight: @semiBold;
+        letter-spacing: 0.5px;
+        opacity: 0.6;
+        padding: 6px 10px;
+        text-align: left;
+        text-transform: uppercase;
+        border-bottom: 2px solid @borderColor;
+    }
+
+    td {
+        border-top: 1px solid @borderColor;
+        color: @colorFont;
+        padding: 10px 10px;
+        vertical-align: middle;
+    }
+
+    tbody tr:hover {
+        background: #f8f9fb;
+    }
+}
+
+// ── ATALHO NA HOME ─────────────────────────────────────────────
+.dashAtalho {
+    display: block;
+    background: @white;
+    border-left: 4px solid @primary;
+    border-radius: 8px;
+    padding: 20px 25px;
+    margin-bottom: 20px;
+    text-decoration: none;
+    .shadow;
+    .transition(0.2s box-shadow);
+
+    &:hover {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        text-decoration: none;
+    }
+
+    &__label {
+        display: block;
+        font-size: 12px;
+        font-weight: @semiBold;
+        letter-spacing: 0.5px;
+        opacity: 0.6;
+        text-transform: uppercase;
+        color: @colorFont;
+        margin-bottom: 4px;
+    }
+
+    &__title {
+        display: block;
+        font-size: 18px;
+        font-weight: @bold;
+        color: @primary;
+    }
+}
+
+@media @tabletSM {
+    .confGrid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+    }
+
+    .confModal__box {
+        margin: 16px;
+        max-height: 92vh;
+    }
+}
