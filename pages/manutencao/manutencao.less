@@ -1,0 +1,73 @@
+.manutencao {
+    align-items: center;
+    background: linear-gradient(135deg, #f0f4ff 0%, #fff8e1 100%);
+    display: flex;
+    justify-content: center;
+    min-height: calc(100vh - 140px);
+    padding: 40px 20px;
+
+    &__box {
+        background: @bgBoxContent;
+        border-radius: 16px;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+        margin: 0 auto;
+        max-width: 500px;
+        padding: 56px 48px;
+        text-align: center;
+        width: 100%;
+
+        @media @tablet-small {
+            padding: 40px 28px;
+        }
+
+        @media @mobile-mid {
+            padding: 32px 20px;
+        }
+    }
+
+    &__icon {
+        font-size: 56px;
+        line-height: 1;
+        margin-bottom: 20px;
+
+        @media @mobile-mid {
+            font-size: 44px;
+        }
+    }
+
+    &__title {
+        color: @primary;
+        font-size: 30px;
+        font-weight: @bold;
+        line-height: 1.2;
+        margin-bottom: 14px;
+
+        span { color: @secundary; }
+
+        @media @tablet-small { font-size: 26px; }
+        @media @mobile-mid   { font-size: 22px; }
+    }
+
+    &__text {
+        color: @color-font;
+        font-size: 15px;
+        line-height: 1.75;
+        margin-bottom: 24px;
+
+        @media @mobile-mid { font-size: 14px; }
+    }
+
+    &__divider {
+        background: @borderColor;
+        border-radius: 2px;
+        height: 1px;
+        margin: 0 auto 20px;
+        width: 48px;
+    }
+
+    &__sub {
+        color: @color-font-sub;
+        font-size: 13px;
+        line-height: 1.65;
+    }
+}

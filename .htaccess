@@ -1,9 +1,18 @@
 Options -Indexes
 RewriteEngine On
 
-# Bloquear acesso direto à pasta config
+# ── Força HTTPS em produção ───────────────────────────────────
+RewriteCond %{HTTP_HOST} oabvoleiclube\.com\.br [NC]
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ── Redireciona www → sem www em produção ─────────────────────
+RewriteCond %{HTTP_HOST} ^www\.oabvoleiclube\.com\.br [NC]
+RewriteRule ^ https://oabvoleiclube.com.br%{REQUEST_URI} [L,R=301]
+
+# ── Bloquear acesso direto à pasta config ─────────────────────
 RewriteRule ^config/ - [F,L]
 
-# Redirecionar URLs amigaveis para index.php
+# ── URLs amigáveis → index.php ────────────────────────────────
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]

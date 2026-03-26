@@ -1,9 +1,19 @@
 <?php
 
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'oab_bd');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+$isProducao = strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') === false
+           && strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') === false;
+
+if ($isProducao) {
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'oabvoleiclube_oab_db');
+    define('DB_USER', 'oabvoleiclube');
+    define('DB_PASS', 'theking@9913');
+} else {
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'oab_bd');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+}
 
 function getDbConnection() {
     try {

@@ -31,6 +31,12 @@
                 </a>
             </li>
             <li class="sidebar__item">
+                <a href="<?= BASE_URL ?>/admin/usuarios"
+                   class="sidebar__link <?= ($subRoute === 'usuarios') ? 'sidebar__link--active' : '' ?>">
+                    Administrar Usuários
+                </a>
+            </li>
+            <li class="sidebar__item">
                 <a href="<?= BASE_URL ?>/admin/configuracoes"
                    class="sidebar__link <?= ($subRoute === 'configuracoes') ? 'sidebar__link--active' : '' ?>">
                     Configurações

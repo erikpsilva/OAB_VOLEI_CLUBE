@@ -31,6 +31,8 @@ $emailAdmin   = trim($_POST['email_admin']        ?? '');
 $emailEsperia = trim($_POST['email_esperia']       ?? '');
 $disparoDia   = trim($_POST['disparo_dia_semana']  ?? '');
 $disparoHora  = trim($_POST['disparo_hora']        ?? '');
+$maxVagas       = (int) ($_POST['max_vagas']           ?? 0);
+$modoAbertura   = trim($_POST['modo_abertura_agenda']  ?? '');
 
 if (!filter_var($emailAdmin, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
@@ -56,6 +58,18 @@ if (!preg_match('/^\d{2}:\d{2}$/', $disparoHora)) {
     exit;
 }
 
+if ($maxVagas < 1) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'O número de vagas deve ser no mínimo 1.']);
+    exit;
+}
+
+if (!in_array($modoAbertura, ['automatico', 'manual'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Modo de abertura inválido.']);
+    exit;
+}
+
 require_once dirname(__FILE__, 3) . '/config/database.php';
 $pdo = getDbConnection();
 
@@ -67,6 +81,8 @@ $stmt->execute(['email_admin',        $emailAdmin]);
 $stmt->execute(['email_esperia',       $emailEsperia]);
 $stmt->execute(['disparo_dia_semana',  $disparoDia]);
 $stmt->execute(['disparo_hora',        $disparoHora]);
+$stmt->execute(['max_vagas',             (string) $maxVagas]);
+$stmt->execute(['modo_abertura_agenda', $modoAbertura]);
 
 http_response_code(200);
 echo json_encode(['success' => true, 'message' => 'Configurações salvas com sucesso!']);

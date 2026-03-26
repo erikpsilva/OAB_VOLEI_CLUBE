@@ -5,6 +5,9 @@ $ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1',
     'http://127.0.0.1:3000',
+    'http://oabvoleiclube.com.br',
+    'http://www.oabvoleiclube.com.br',
+    'https://oabvoleiclube.com.br',
     'https://www.oabvoleiclube.com.br',
 ];
 
@@ -16,18 +19,26 @@ function validateApiAccess(array $allowedOrigins): void {
 
     // Verifica pelo header Origin (presente em requisições cross-origin)
     if (!empty($origin)) {
-        foreach ($allowedOrigins as $allowed) {
-            if (rtrim($origin, '/') === rtrim($allowed, '/')) {
-                $originAllowed = true;
-                header('Access-Control-Allow-Origin: ' . $origin);
-                break;
+        $originHost = parse_url($origin, PHP_URL_HOST);
+
+        // Localhost em qualquer porta (BrowserSync, dev servers, etc.)
+        if ($originHost === 'localhost' || $originHost === '127.0.0.1') {
+            $originAllowed = true;
+            header('Access-Control-Allow-Origin: ' . $origin);
+        } else {
+            foreach ($allowedOrigins as $allowed) {
+                if (rtrim($origin, '/') === rtrim($allowed, '/')) {
+                    $originAllowed = true;
+                    header('Access-Control-Allow-Origin: ' . $origin);
+                    break;
+                }
             }
         }
     } else {
         // Sem header Origin = mesma origem (same-origin request)
         // Valida pelo Referer como fallback
         foreach ($allowedOrigins as $allowed) {
-            if (str_starts_with($referer, $allowed)) {
+            if (strpos($referer, $allowed) === 0) {
                 $originAllowed = true;
                 break;
             }

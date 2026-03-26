@@ -8,64 +8,23 @@ $today = new DateTime();
 $today->setTime(0, 0, 0);
 $year  = (int) $today->format('Y');
 
-// ── CÁLCULO DE PÁSCOA (algoritmo anônimo gregoriano) ─────────
-function getEaster(int $year): DateTime {
-    $a = $year % 19;
-    $b = intdiv($year, 100);
-    $c = $year % 100;
-    $d = intdiv($b, 4);
-    $e = $b % 4;
-    $f = intdiv($b + 8, 25);
-    $g = intdiv($b - $f + 1, 3);
-    $h = (19 * $a + $b - $d - $g + 15) % 30;
-    $i = intdiv($c, 4);
-    $k = $c % 4;
-    $l = (32 + 2 * $e + 2 * $i - $h - $k) % 7;
-    $m = intdiv($a + 11 * $h + 22 * $l, 451);
-    $month = intdiv($h + $l - 7 * $m + 114, 31);
-    $day   = (($h + $l - 7 * $m + 114) % 31) + 1;
-    return new DateTime(sprintf('%04d-%02d-%02d', $year, $month, $day));
-}
-
-// ── FERIADOS NACIONAIS + SÃO PAULO ───────────────────────────
-function getHolidays(int $year): array {
-    $easter = getEaster($year);
-
-    // Feriados móveis baseados na Páscoa
-    $sexta_santa   = (clone $easter)->modify('-2 days');
-    $corpus        = (clone $easter)->modify('+60 days');
-    $carnaval_seg  = (clone $easter)->modify('-48 days');
-    $carnaval_ter  = (clone $easter)->modify('-47 days');
-
-    $holidays = [
-        // Nacionais fixos
-        "$year-01-01" => 'Ano Novo',
-        "$year-04-21" => 'Tiradentes',
-        "$year-05-01" => 'Dia do Trabalhador',
-        "$year-09-07" => 'Independência do Brasil',
-        "$year-10-12" => 'Nossa Senhora Aparecida',
-        "$year-11-02" => 'Finados',
-        "$year-11-15" => 'Proclamação da República',
-        "$year-11-20" => 'Consciência Negra',
-        "$year-12-25" => 'Natal',
-        // Nacionais móveis
-        $sexta_santa->format('Y-m-d')  => 'Sexta-feira Santa',
-        $corpus->format('Y-m-d')       => 'Corpus Christi',
-        $carnaval_seg->format('Y-m-d') => 'Carnaval',
-        $carnaval_ter->format('Y-m-d') => 'Carnaval',
-        // São Paulo (estado e cidade)
-        "$year-01-25" => 'Aniversário de São Paulo',
-        "$year-07-09" => 'Revolução Constitucionalista',
-    ];
-
-    return $holidays;
-}
-
-$holidays = getHolidays($year);
-
 // ── CONTAGEM DE CONFIRMAÇÕES E TREINOS ENCERRADOS ────────────
 require_once ROOT . '/config/database.php';
-$pdo   = getDbConnection();
+require_once ROOT . '/config/envio_helper.php';
+$pdo      = getDbConnection();
+$config   = getAppConfig($pdo);
+$maxVagas           = (int) $config['max_vagas'];
+$modoAbertura       = $config['modo_abertura_agenda'] ?? 'automatico';
+$agendaLiberadaData = $config['agenda_liberada_data'] ?? '';
+
+// Verifica se o jogador logado é favorito
+$isFavoritoLogado = false;
+if (!empty($_SESSION['jogador'])) {
+    $stmtFav = $pdo->prepare("SELECT favorito FROM jogadores WHERE id = ? LIMIT 1");
+    $stmtFav->execute([$_SESSION['jogador']['id']]);
+    $favRow = $stmtFav->fetch();
+    $isFavoritoLogado = $favRow && (int)$favRow['favorito'] === 1;
+}
 
 $stmt  = $pdo->query("SELECT data_treino, COUNT(*) as total FROM confirmacoes_treino GROUP BY data_treino");
 $counts = [];
@@ -91,12 +50,9 @@ $meses = ['01'=>'Jan','02'=>'Fev','03'=>'Mar','04'=>'Abr','05'=>'Mai','06'=>'Jun
           '07'=>'Jul','08'=>'Ago','09'=>'Set','10'=>'Out','11'=>'Nov','12'=>'Dez'];
 
 // ── LÓGICA DE STATUS ─────────────────────────────────────────
-function getStatus(DateTime $friday, DateTime $today, array $holidays): string {
-    $key = $friday->format('Y-m-d');
-
-    if (isset($holidays[$key])) return 'feriado';
-    if ($friday < $today)       return 'concluido';
-    if ($friday == $today)      return 'em_curso';
+function getStatus(DateTime $friday, DateTime $today): string {
+    if ($friday < $today)  return 'concluido';
+    if ($friday == $today) return 'em_curso';
 
     $monday = (clone $friday)->modify('-4 days');
     if ($today >= $monday && $today < $friday) return 'disponivel';
@@ -106,13 +62,13 @@ function getStatus(DateTime $friday, DateTime $today, array $holidays): string {
 
 function statusLabel(string $status): string {
     return match($status) {
-        'concluido'   => 'Concluído',
-        'em_curso'    => 'Em curso',
-        'disponivel'  => 'Disponível',
-        'lotado'      => 'Lotado',
-        'encerrado'   => 'Encerrado',
-        'feriado'     => 'Feriado',
-        default       => 'Indisponível',
+        'concluido'  => 'Concluído',
+        'em_curso'   => 'Em curso',
+        'disponivel' => 'Disponível',
+        'lotado'     => 'Lotado',
+        'encerrado'  => 'Encerrado',
+        'aguardando' => 'Aguardando abertura',
+        default      => 'Indisponível',
     };
 }
 ?>
@@ -138,37 +94,45 @@ function statusLabel(string $status): string {
                 <span class="calendario__legenda__item --disponivel">Disponível</span>
                 <span class="calendario__legenda__item --lotado">Lotado</span>
                 <span class="calendario__legenda__item --encerrado">Encerrado</span>
+                <span class="calendario__legenda__item --aguardando">Aguardando abertura</span>
                 <span class="calendario__legenda__item --indisponivel">Indisponível</span>
-                <span class="calendario__legenda__item --feriado">Feriado</span>
             </div>
+        </div>
+
+        <div class="calendario__filtro">
+            <label class="calendario__filtro__toggle">
+                <input type="checkbox" id="filtroPassados" />
+                <span class="calendario__filtro__slider"></span>
+            </label>
+            <span class="calendario__filtro__label">Exibir treinos já realizados</span>
         </div>
 
         <p class="calendario__dica">Clique no dia do treino com status <strong>Disponível</strong> para confirmar sua presença.</p>
 
-        <div class="calendario__grid">
+        <div class="calendario__grid" id="calendarioGrid">
             <?php foreach ($fridays as $friday):
                 $key    = $friday->format('Y-m-d');
-                $status = getStatus($friday, $today, $holidays);
-                if (isset($encerrados[$key]) && !in_array($status, ['concluido', 'feriado'])) {
+                $status = getStatus($friday, $today);
+                if (isset($encerrados[$key]) && !in_array($status, ['concluido'])) {
                     $status = 'encerrado';
-                } elseif ($status === 'disponivel' && ($counts[$key] ?? 0) >= 30) {
+                } elseif ($status === 'disponivel' && ($counts[$key] ?? 0) >= $maxVagas) {
                     $status = 'lotado';
+                } elseif ($status === 'disponivel' && $modoAbertura === 'manual' && !$isFavoritoLogado && $agendaLiberadaData !== $key) {
+                    $status = 'aguardando';
                 }
-                $dia    = $friday->format('d');
-                $mes    = $meses[$friday->format('m')];
-                $nome   = $holidays[$key] ?? null;
-                $label  = $dia . '/' . $friday->format('m') . '/' . $friday->format('Y');
+                $dia   = $friday->format('d');
+                $mes   = $meses[$friday->format('m')];
+                $label = $dia . '/' . $friday->format('m') . '/' . $friday->format('Y');
             ?>
             <div class="calendarioBox --<?= $status ?><?= $status === 'disponivel' ? ' --clicavel' : '' ?>"
-                 <?= $status === 'disponivel' ? "data-date=\"{$key}\" data-label=\"{$label}\"" : '' ?>>
+                 <?= $status === 'disponivel' ? "data-date=\"{$key}\" data-label=\"{$label}\"" : '' ?>
+                 <?= $status === 'aguardando' ? 'title="As confirmações para este treino ainda não foram abertas pelo administrador."' : '' ?>>
+
                 <div class="calendarioBox__date">
                     <span class="calendarioBox__date__day"><?= $dia ?></span>
                     <span class="calendarioBox__date__month"><?= $mes ?></span>
                 </div>
                 <p class="calendarioBox__weekday">Sexta-feira</p>
-                <?php if ($nome): ?>
-                    <p class="calendarioBox__holiday"><?= htmlspecialchars($nome) ?></p>
-                <?php endif; ?>
                 <span class="calendarioBox__status"><?= statusLabel($status) ?></span>
             </div>
             <?php endforeach; ?>

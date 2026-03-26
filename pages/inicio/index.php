@@ -1,6 +1,20 @@
 <?php
 require_once ROOT . '/config/database.php';
-$pdo = getDbConnection();
+require_once ROOT . '/config/envio_helper.php';
+$pdo      = getDbConnection();
+$config   = getAppConfig($pdo);
+$maxVagas           = (int) $config['max_vagas'];
+$modoAbertura       = $config['modo_abertura_agenda'] ?? 'automatico';
+$agendaLiberadaData = $config['agenda_liberada_data'] ?? '';
+
+// Verifica se o jogador logado é favorito
+$isFavoritoLogado = false;
+if (!empty($_SESSION['jogador'])) {
+    $stmtFav = $pdo->prepare("SELECT favorito FROM jogadores WHERE id = ? LIMIT 1");
+    $stmtFav->execute([$_SESSION['jogador']['id']]);
+    $favRow = $stmtFav->fetch();
+    $isFavoritoLogado = $favRow && (int)$favRow['favorito'] === 1;
+}
 
 // ── PRÓXIMO TREINO ────────────────────────────────────────────
 $hoje = new DateTime();
@@ -20,18 +34,22 @@ $stmtEnc = $pdo->prepare("SELECT 1 FROM treinos_encerrados WHERE data_treino = ?
 $stmtEnc->execute([$proximaKey]);
 $isEncerrado = (bool) $stmtEnc->fetch();
 
-$isLotado       = !$isEncerrado && $totalConfirmados >= 30;
-$vagasRestantes = max(0, 30 - $totalConfirmados);
-$progressoPct   = min(100, round($totalConfirmados / 30 * 100));
+$isLotado       = !$isEncerrado && $totalConfirmados >= $maxVagas;
+$vagasRestantes = max(0, $maxVagas - $totalConfirmados);
+$progressoPct   = min(100, round($totalConfirmados / $maxVagas * 100));
 
 $diaDaSemana  = (int) $hoje->format('N'); // 1=seg … 7=dom
 $isSexta      = ($hoje == $proximaSexta);
 
-if ($isEncerrado)           { $statusTreino = 'encerrado'; $statusLabel = 'Encerrado'; }
-elseif ($isLotado)          { $statusTreino = 'lotado';    $statusLabel = 'Lotado';    }
-elseif ($isSexta)           { $statusTreino = 'hoje';      $statusLabel = 'Hoje!';     }
-elseif ($diaDaSemana <= 4)  { $statusTreino = 'aberto';    $statusLabel = 'Confirmações abertas'; }
-else                        { $statusTreino = 'em_breve';  $statusLabel = 'Em breve';  }
+// Modo manual: não-favoritos só veem como aberto se a agenda foi liberada para esta sexta
+$agendaBloqueadaParaEste = ($modoAbertura === 'manual' && !$isFavoritoLogado && $agendaLiberadaData !== $proximaKey);
+
+if ($isEncerrado)                        { $statusTreino = 'encerrado';  $statusLabel = 'Encerrado'; }
+elseif ($isLotado)                       { $statusTreino = 'lotado';     $statusLabel = 'Lotado';    }
+elseif ($isSexta)                        { $statusTreino = 'hoje';       $statusLabel = 'Hoje!';     }
+elseif ($agendaBloqueadaParaEste && $diaDaSemana <= 4) { $statusTreino = 'aguardando'; $statusLabel = 'Aguardando abertura'; }
+elseif ($diaDaSemana <= 4)               { $statusTreino = 'aberto';     $statusLabel = 'Confirmações abertas'; }
+else                                     { $statusTreino = 'em_breve';   $statusLabel = 'Em breve';  }
 
 $mesesFull = ['01'=>'Janeiro','02'=>'Fevereiro','03'=>'Março','04'=>'Abril','05'=>'Maio','06'=>'Junho',
               '07'=>'Julho','08'=>'Agosto','09'=>'Setembro','10'=>'Outubro','11'=>'Novembro','12'=>'Dezembro'];
@@ -103,7 +121,7 @@ if ($jogadorLogado) {
             <div class="homeTreino__card__right">
                 <div class="homeTreino__vagas">
                     <div class="homeTreino__vagas__nums">
-                        <span class="homeTreino__vagas__total"><?= $totalConfirmados ?><small>/30</small></span>
+                        <span class="homeTreino__vagas__total"><?= $totalConfirmados ?><small>/<?= $maxVagas ?></small></span>
                         <span class="homeTreino__vagas__label">confirmados</span>
                     </div>
                     <div class="homeTreino__vagas__bar">
@@ -118,7 +136,9 @@ if ($jogadorLogado) {
                     <?php endif; ?>
                 </div>
 
-                <?php if ($jogadorLogado && $statusTreino === 'aberto' && !$jogadorConfirmou): ?>
+                <?php if ($jogadorLogado && $statusTreino === 'aguardando'): ?>
+                    <p class="homeTreino__vagas__restantes --esgotado">Aguardando abertura pelo admin</p>
+                <?php elseif ($jogadorLogado && $statusTreino === 'aberto' && !$jogadorConfirmou): ?>
                     <a href="<?= BASE_URL ?>/calendario" class="btn btn--primary homeTreino__btn">Confirmar presença</a>
                 <?php elseif ($jogadorLogado && $jogadorConfirmou): ?>
                     <div class="homeTreino__confirmado">&#10003; Você está confirmado!</div>
@@ -152,8 +172,8 @@ if ($jogadorLogado) {
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">3</div>
                 <div class="homeGuia__step__icon">&#128274;</div>
-                <h3>Encerramento quinta às 19h</h3>
-                <p>Às 19h da quinta-feira a lista é encerrada automaticamente e enviada para a coordenação do clube.</p>
+                <h3>Encerramento sexta às 19h</h3>
+                <p>Às 19h da sexta-feira a lista é encerrada automaticamente e enviada para a coordenação do clube.</p>
             </div>
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">4</div>

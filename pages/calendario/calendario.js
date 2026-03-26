@@ -2,6 +2,15 @@ $(document).ready(function () {
 
     let selectedDate = null;
 
+    // ── Filtro de treinos passados ────────────────────────────
+    $('#filtroPassados').on('change', function () {
+        if ($(this).is(':checked')) {
+            $('#calendarioGrid').addClass('--mostrar-passados');
+        } else {
+            $('#calendarioGrid').removeClass('--mostrar-passados');
+        }
+    });
+
     // Abre o modal ao clicar em card disponível
     $(document).on('click', '.calendarioBox.--clicavel', function () {
         selectedDate = $(this).data('date');

@@ -106,3 +106,108 @@
         }
     }
 }
+
+// ── Bloco agenda manual ───────────────────────────────────────
+.configAgendaManual {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    padding-top: 8px;
+
+    &__inner {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    &__status {
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: @semi-bold;
+        padding: 6px 14px;
+
+        &.--liberada  { background: #d4edda; color: #155724; }
+        &.--bloqueada { background: #fff3cd; color: #856404; }
+    }
+}
+
+// ── Bloco de manutenção ───────────────────────────────────────
+.configManutencao {
+    border: 2px solid @borderColor;
+    border-radius: 10px;
+    margin-bottom: 28px;
+    padding: 24px;
+    .transition(0.2s border-color);
+
+    &.--ativa {
+        border-color: @error;
+        background-color: #fff8f8;
+    }
+
+    &__title {
+        font-size: 16px;
+        font-weight: @bold;
+        color: @primary;
+        margin-bottom: 6px;
+
+        span { color: @error; }
+    }
+
+    &__desc {
+        font-size: 13px;
+        color: @color-font-sub;
+        line-height: 1.6;
+        margin-bottom: 14px;
+    }
+
+    &__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: @semi-bold;
+        padding: 6px 14px;
+
+        &.--inativa {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        &.--ativa {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+
+        @media @tabletSM {
+            justify-content: flex-start;
+            margin-top: 16px;
+        }
+    }
+}
+
+// ── Botões extras ─────────────────────────────────────────────
+.btn--danger {
+    background-color: @error;
+    color: @white;
+    border: none;
+
+    &:hover { background-color: darken(@error, 8%); }
+}
+
+.btn--success {
+    background-color: #28a745;
+    color: @white;
+    border: none;
+
+    &:hover { background-color: darken(#28a745, 8%); }
+}

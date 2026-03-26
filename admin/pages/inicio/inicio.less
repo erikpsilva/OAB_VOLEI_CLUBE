@@ -7,6 +7,8 @@
             font-size: 24px;
             font-weight: @regular;
             margin-bottom: 4px;
+
+            span { color: @primary; font-weight: @semiBold; }
         }
 
         p {
@@ -17,6 +19,10 @@
     }
 
     &__stats {
+        margin-bottom: 20px;
+    }
+
+    &__atalhos {
         margin-bottom: 25px;
     }
 }
@@ -27,30 +33,248 @@
     border-left: 4px solid @borderColor;
     border-radius: 8px;
     margin-bottom: 20px;
-    padding: 20px 25px;
+    padding: 18px 20px;
+    position: relative;
     .shadow;
+
+    &__icon {
+        display: block;
+        font-size: 22px;
+        margin-bottom: 6px;
+        opacity: 0.75;
+    }
 
     &__number {
         display: block;
-        font-size: 36px;
+        font-size: 34px;
         font-weight: @bold;
         line-height: 1;
         margin-bottom: 6px;
+
+        small {
+            font-size: 16px;
+            font-weight: @regular;
+            opacity: 0.55;
+        }
     }
 
     &__label {
         color: @colorFont;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: @semiBold;
         letter-spacing: 0.5px;
-        opacity: 0.7;
+        opacity: 0.65;
         text-transform: uppercase;
     }
 
-    &--total  { border-left-color: @primary;  .dashCard__number { color: @primary; } }
-    &--admin  { border-left-color: @primary;  .dashCard__number { color: @primary; } }
-    &--editor { border-left-color: @alert;    .dashCard__number { color: darken(@alert, 20%); } }
-    &--leitor { border-left-color: @btnGray;  .dashCard__number { color: @btnGray; } }
+    &--jogadores  { border-left-color: @primary;    .dashCard__number { color: @primary; } }
+    &--confirmados{ border-left-color: @green;       .dashCard__number { color: darken(@green, 8%); } }
+    &--vagas      { border-left-color: @orange;      .dashCard__number { color: darken(@orange, 12%); } }
+    &--encerrados { border-left-color: @btnGray;     .dashCard__number { color: @btnGray; } }
+}
+
+// ── ATALHOS ───────────────────────────────────────────────────
+.dashAtalho {
+    align-items: center;
+    background: @white;
+    border-radius: 8px;
+    border: 2px solid @borderColor;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 20px;
+    min-height: 90px;
+    padding: 18px;
+    text-align: center;
+    text-decoration: none;
+    .shadow;
+    .transition(0.15s all);
+
+    &:hover {
+        border-color: @primary;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    &__icon {
+        font-size: 24px;
+        line-height: 1;
+    }
+
+    &__title {
+        color: @colorFont;
+        font-size: 13px;
+        font-weight: @semiBold;
+    }
+
+    &--confirmacoes:hover { border-color: @green; }
+    &--usuarios:hover     { border-color: @primary; }
+    &--config:hover       { border-color: @alert; }
+    &--novo:hover         { border-color: @secundary; }
+}
+
+// ── PRÓXIMO TREINO ────────────────────────────────────────────
+.dashTreino {
+    background: @white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 25px;
+    .shadow;
+
+    &__title {
+        border-bottom: 1px solid @borderColor;
+        font-size: 15px;
+        font-weight: @semiBold;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+    }
+
+    &__data {
+        font-size: 14px;
+        font-weight: @semiBold;
+        color: @colorFont;
+        margin-bottom: 10px;
+    }
+
+    &__status {
+        display: inline-block;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: @bold;
+        letter-spacing: 0.5px;
+        margin-bottom: 18px;
+        padding: 4px 12px;
+        text-transform: uppercase;
+
+        &.--aberto    { background: fade(@green, 15%);    color: darken(@green, 10%); }
+        &.--encerrado { background: fade(@btnGray, 15%);  color: @btnGray; }
+        &.--lotado    { background: fade(@orange, 20%);   color: darken(@orange, 15%); }
+        &.--hoje      { background: fade(@primary, 15%);  color: @primary; }
+        &.--em_breve  { background: fade(@encerrado, 15%);color: darken(@encerrado, 10%); }
+    }
+
+    &__progress {
+        margin-bottom: 20px;
+
+        &__bar {
+            background: @borderColor;
+            border-radius: 6px;
+            height: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        &__fill {
+            border-radius: 6px;
+            height: 100%;
+            .transition(0.3s width);
+
+            &.--aberto    { background: @green; }
+            &.--encerrado { background: @btnGray; }
+            &.--lotado    { background: @orange; }
+            &.--hoje      { background: @primary; }
+            &.--em_breve  { background: @encerrado; }
+        }
+
+        &__label {
+            color: @colorFont;
+            font-size: 12px;
+            opacity: 0.65;
+        }
+    }
+
+    &__btn {
+        display: block;
+        text-align: center;
+        width: 100%;
+    }
+}
+
+// ── RECENTES ──────────────────────────────────────────────────
+.dashRecentes {
+    background: @white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 25px;
+    .shadow;
+
+    &__title {
+        align-items: center;
+        border-bottom: 1px solid @borderColor;
+        display: flex;
+        font-size: 15px;
+        font-weight: @semiBold;
+        gap: 8px;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+    }
+
+    &__sub {
+        font-size: 12px;
+        font-weight: @regular;
+        opacity: 0.55;
+
+        a {
+            color: @primary;
+            .transition(0.15s opacity);
+            &:hover { opacity: 0.7; }
+        }
+    }
+
+    &__vazio {
+        color: @colorFont;
+        font-size: 13px;
+        opacity: 0.55;
+        padding: 10px 0;
+    }
+
+    &__mais {
+        color: @colorFont;
+        font-size: 12px;
+        margin-top: 10px;
+        opacity: 0.6;
+        text-align: right;
+
+        a { color: @primary; }
+    }
+}
+
+.dashTable {
+    border-collapse: collapse;
+    font-size: 13px;
+    width: 100%;
+
+    th {
+        color: @colorFont;
+        font-size: 11px;
+        font-weight: @semiBold;
+        letter-spacing: 0.5px;
+        opacity: 0.6;
+        padding: 8px 12px;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    td {
+        border-top: 1px solid @borderColor;
+        color: @colorFont;
+        padding: 10px 12px;
+        vertical-align: middle;
+    }
+
+    tbody tr:hover {
+        background: @bgBoxContent;
+    }
+
+    &__num {
+        color: @btnGray !important;
+        font-size: 12px;
+        text-align: center;
+        width: 32px;
+    }
 }
 
 // ── PERFIL ────────────────────────────────────────────────────
@@ -89,7 +313,7 @@
     }
 
     &__val {
-        font-size: 14px;
+        font-size: 13px;
         margin-top: 2px;
     }
 
@@ -97,51 +321,6 @@
         display: block;
         text-align: center;
         width: 100%;
-    }
-}
-
-// ── RECENTES ──────────────────────────────────────────────────
-.dashRecentes {
-    background: @white;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    padding: 25px;
-    .shadow;
-
-    &__title {
-        border-bottom: 1px solid @borderColor;
-        font-size: 15px;
-        font-weight: @semiBold;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-    }
-}
-
-.dashTable {
-    border-collapse: collapse;
-    font-size: 13px;
-    width: 100%;
-
-    th {
-        color: @colorFont;
-        font-size: 11px;
-        font-weight: @semiBold;
-        letter-spacing: 0.5px;
-        opacity: 0.6;
-        padding: 8px 12px;
-        text-align: left;
-        text-transform: uppercase;
-    }
-
-    td {
-        border-top: 1px solid @borderColor;
-        color: @colorFont;
-        padding: 10px 12px;
-        vertical-align: middle;
-    }
-
-    tbody tr:hover {
-        background: @bgBoxContent;
     }
 }
 

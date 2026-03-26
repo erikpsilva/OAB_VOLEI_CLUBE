@@ -1,0 +1,265 @@
+.usuariosPage {
+
+    h2 {
+        font-size: @title-size;
+        font-weight: @bold;
+        color: @primary;
+        margin-bottom: 6px;
+
+        span { color: @secundary; }
+    }
+
+    &__sub {
+        font-size: 14px;
+        color: @color-font-sub;
+        margin-bottom: 28px;
+    }
+
+    &__back {
+        display: inline-block;
+        font-size: 13px;
+        color: @primary;
+        margin-bottom: 10px;
+        .transition(0.15s opacity);
+
+        &:hover { opacity: 0.7; }
+    }
+
+    &__alert {
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: @semi-bold;
+        margin-bottom: 20px;
+
+        &.--success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    }
+
+    &__secao {
+        margin-bottom: 12px;
+
+        h3 {
+            font-size: 16px;
+            font-weight: @bold;
+            color: @primary;
+            margin-bottom: 4px;
+
+            span { color: @secundary; }
+        }
+    }
+
+    &__secaoSub {
+        font-size: 13px;
+        color: @color-font-sub;
+        margin-bottom: 14px;
+    }
+
+    &__vazio {
+        font-size: 14px;
+        color: @color-font-sub;
+        padding: 20px 0;
+    }
+
+    &__feedback {
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: @semi-bold;
+        margin-bottom: 4px;
+
+        &.--success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        &.--error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+}
+
+// ── TABELA ────────────────────────────────────────────────────
+.usuariosTable {
+    background-color: @white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    overflow: hidden;
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead tr {
+        background-color: @primary;
+    }
+
+    thead th {
+        padding: 11px 14px;
+        text-align: left;
+        font-size: 11px;
+        color: rgba(255,255,255,0.85);
+        font-weight: @bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    &__row {
+        cursor: pointer;
+        .transition(0.15s background-color);
+
+        &:nth-child(even) { background-color: #f8f9fa; }
+        &:hover           { background-color: #eef3fb !important; }
+
+        td {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: @color-font;
+            border-bottom: 1px solid @borderColor;
+        }
+    }
+
+    &__nome {
+        font-weight: @semi-bold;
+        color: @primary !important;
+    }
+
+    &__btn {
+        display: inline-block;
+        background-color: @primary;
+        color: @white;
+        font-size: 12px;
+        font-weight: @bold;
+        padding: 5px 14px;
+        border-radius: 4px;
+        .transition(0.15s background-color);
+        white-space: nowrap;
+
+        &:hover { background-color: darken(@primary, 8%); }
+    }
+
+    &__star {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 28px;
+        color: @lightgray;
+        padding: 2px 4px;
+        line-height: 1;
+        .transition(0.15s color);
+
+        &:hover    { color: @secundary; }
+        &.--ativo  { color: @secundary; }
+        &:disabled { opacity: 0.4; cursor: wait; }
+    }
+}
+
+// ── RESPONSIVO ────────────────────────────────────────────────
+@media @tabletSM {
+
+    .usuariosTable {
+        overflow: visible;
+
+        table, thead, tbody, tr, td {
+            display: block;
+            width: 100%;
+        }
+
+        thead { display: none; }
+
+        &__row {
+            background: @white !important;
+            border: 1px solid @borderColor;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+
+            &:hover { background: #eef3fb !important; }
+
+            td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 14px;
+                border-bottom: 1px solid #f0f0f0;
+                font-size: 13px;
+
+                &:last-child { border-bottom: none; }
+
+                // Célula de ação (editar/favoritar) — alinha à direita
+                &:not([data-label]) {
+                    justify-content: flex-end;
+                    padding-top: 12px;
+                    padding-bottom: 12px;
+                }
+            }
+        }
+    }
+}
+
+// ── MODAL DE EXCLUSÃO ─────────────────────────────────────────
+.deleteModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+
+    &.--open { display: flex; }
+
+    &__box {
+        background: @white;
+        border-radius: 10px;
+        padding: 36px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    &__title {
+        font-size: 18px;
+        font-weight: @bold;
+        color: @error;
+        margin-bottom: 14px;
+    }
+
+    &__text {
+        font-size: 14px;
+        color: @color-font;
+        line-height: 1.65;
+        margin-bottom: 28px;
+
+        strong { color: @primary; }
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+}
+
+// ── BOTÃO DANGER ──────────────────────────────────────────────
+.btn--danger {
+    background-color: @error;
+    color: @white;
+    border: none;
+
+    &:hover { background-color: darken(@error, 8%); }
+}

@@ -27,6 +27,9 @@ function getAppConfig(PDO $pdo): array
         'email_esperia'      => 'erikpsilva@gmail.com',
         'disparo_dia_semana' => '4',
         'disparo_hora'       => '19:00',
+        'max_vagas'          => '30',
+        'modo_abertura_agenda' => 'automatico',
+        'agenda_liberada_data' => '',
     ];
     try {
         $stmt = $pdo->query("SELECT chave, valor FROM app_configuracoes");
