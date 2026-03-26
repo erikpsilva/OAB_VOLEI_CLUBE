@@ -1,4 +1,10 @@
 <?php
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
+
 /*
  * Helper de envio de confirmações de treino.
  *
@@ -14,7 +20,7 @@
 
 define('LIMITE_VAGAS',    30);
 define('EMAIL_FROM_NAME', 'OAB Vôlei Clube');
-define('EMAIL_FROM_ADDR', 'noreply@oabvoleiclube.com.br');
+define('EMAIL_FROM_ADDR', 'noreply@oabvoleiclube.com.br'); // e-mail criado no cPanel
 
 /**
  * Lê as configurações do sistema do banco de dados,
@@ -23,11 +29,19 @@ define('EMAIL_FROM_ADDR', 'noreply@oabvoleiclube.com.br');
 function getAppConfig(PDO $pdo): array
 {
     $defaults = [
-        'email_admin'        => 'erikprimao@gmail.com',
-        'email_esperia'      => 'erikpsilva@gmail.com',
-        'disparo_dia_semana' => '4',
-        'disparo_hora'       => '19:00',
-        'max_vagas'          => '30',
+        'emails_admin'         => '["erikprimao@gmail.com"]',
+        'emails_esperia'       => '["erikpsilva@gmail.com"]',
+        'email_remetente'      => 'noreply@oabvoleiclube.com.br',
+        'mensagem_email'       => '',
+        'smtp_ativo'           => '0',
+        'smtp_host'            => '',
+        'smtp_porta'           => '587',
+        'smtp_usuario'         => '',
+        'smtp_senha'           => '',
+        'smtp_encryption'      => 'tls',
+        'disparo_dia_semana'   => '4',
+        'disparo_hora'         => '19:00',
+        'max_vagas'            => '30',
         'modo_abertura_agenda' => 'automatico',
         'agenda_liberada_data' => '',
     ];
@@ -54,9 +68,19 @@ function getAppConfig(PDO $pdo): array
 function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): array
 {
     // ── Lê configurações do banco ────────────────────────────────
-    $config       = getAppConfig($pdo);
-    $emailAdmin   = $config['email_admin'];
-    $emailEsperia = $config['email_esperia'];
+    $config          = getAppConfig($pdo);
+    $emailsAdmin     = json_decode($config['emails_admin']   ?? '[]', true) ?: [];
+    $emailsEsperia   = json_decode($config['emails_esperia'] ?? '[]', true) ?: [];
+    $emailRemetente  = $config['email_remetente'] ?: EMAIL_FROM_ADDR;
+    $mensagemEmail   = $config['mensagem_email']  ?? '';
+    $smtpConfig      = [
+        'ativo'      => ($config['smtp_ativo']     ?? '0') === '1',
+        'host'       => $config['smtp_host']       ?? '',
+        'porta'      => $config['smtp_porta']      ?? '587',
+        'usuario'    => $config['smtp_usuario']    ?? '',
+        'senha'      => $config['smtp_senha']      ?? '',
+        'encryption' => $config['smtp_encryption'] ?? 'tls',
+    ];
 
     // ── Busca confirmados ─────────────────────────────────────────
     $stmt = $pdo->prepare("
@@ -76,37 +100,45 @@ function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): ar
     $dt        = DateTime::createFromFormat('Y-m-d', $data);
     $dataLonga = $dt->format('d') . ' de ' . $meses[$dt->format('m')] . ' de ' . $dt->format('Y');
 
-    // ── Email para a advogada (CPF mascarado) ─────────────────────
+    // ── Email para a advogada (CPF completo) ──────────────────────
     $listaAdvogada = array_map(function ($j) {
         return [
             'nome_completo' => $j['nome_completo'],
-            'cpf'           => _maskCpf($j['cpf'] ?? ''),
-            'telefone'      => $j['telefone'] ?? '',
+            'cpf'           => _formatCpf($j['cpf'] ?? ''),
+            'telefone'      => _formatTelefone($j['telefone'] ?? ''),
         ];
     }, $jogadores);
 
-    $htmlAdv = _buildEmail($dataLonga, $listaAdvogada, 'advogada');
-    $okAdv   = _sendEmail(
-        $emailAdmin,
-        'OAB Vôlei Clube — Confirmações de Presença — ' . $dataLonga,
-        $htmlAdv
-    );
+    $htmlAdv     = _buildEmail($dataLonga, $listaAdvogada, 'advogada', $mensagemEmail);
+    $subjectAdv  = 'OAB Vôlei Clube — Confirmações de Presença — ' . $dataLonga;
+    $okAdv       = true;
+    $primeiroAdv = true;
+    foreach ($emailsAdmin as $addr) {
+        $bcc = $primeiroAdv ? $emailRemetente : '';
+        if (!_sendEmail($addr, $subjectAdv, $htmlAdv, $emailRemetente, $bcc, $smtpConfig)) $okAdv = false;
+        $primeiroAdv = false;
+    }
+    if (empty($emailsAdmin)) $okAdv = false;
 
     // ── Email para o Clube Esperia (CPF completo) ─────────────────
     $listaEsperia = array_map(function ($j) {
         return [
             'nome_completo' => $j['nome_completo'],
             'cpf'           => _formatCpf($j['cpf'] ?? ''),
-            'telefone'      => $j['telefone'] ?? '',
+            'telefone'      => _formatTelefone($j['telefone'] ?? ''),
         ];
     }, $jogadores);
 
-    $htmlEsp = _buildEmail($dataLonga, $listaEsperia, 'esperia');
-    $okEsp   = _sendEmail(
-        $emailEsperia,
-        'OAB Vôlei Clube — Lista Oficial de Presença — ' . $dataLonga,
-        $htmlEsp
-    );
+    $htmlEsp      = _buildEmail($dataLonga, $listaEsperia, 'esperia', $mensagemEmail);
+    $subjectEsp   = 'OAB Vôlei Clube — Lista Oficial de Presença — ' . $dataLonga;
+    $okEsp        = true;
+    $primeiroEsp  = true;
+    foreach ($emailsEsperia as $addr) {
+        $bcc = $primeiroEsp ? $emailRemetente : '';
+        if (!_sendEmail($addr, $subjectEsp, $htmlEsp, $emailRemetente, $bcc, $smtpConfig)) $okEsp = false;
+        $primeiroEsp = false;
+    }
+    if (empty($emailsEsperia)) $okEsp = false;
 
     // ── Marca como encerrado ──────────────────────────────────────
     $ins = $pdo->prepare("
@@ -130,6 +162,18 @@ function _maskCpf(string $cpf): string
     return strlen($d) === 11 ? $d[0] . '**.***.***-' . substr($d, -2) : $cpf;
 }
 
+function _formatTelefone(string $tel): string
+{
+    $d = preg_replace('/\D/', '', $tel);
+    if (strlen($d) === 11) {
+        return '(' . substr($d, 0, 2) . ') ' . substr($d, 2, 5) . '-' . substr($d, 7, 4);
+    }
+    if (strlen($d) === 10) {
+        return '(' . substr($d, 0, 2) . ') ' . substr($d, 2, 4) . '-' . substr($d, 6, 4);
+    }
+    return $tel;
+}
+
 function _formatCpf(string $cpf): string
 {
     $d = preg_replace('/\D/', '', $cpf);
@@ -138,30 +182,82 @@ function _formatCpf(string $cpf): string
         : $cpf;
 }
 
-function _sendEmail(string $to, string $subject, string $html): bool
+function _sendEmail(string $to, string $subject, string $html, string $fromAddr = '', string $bcc = '', array $smtpConfig = []): bool
 {
+    if ($fromAddr === '') $fromAddr = EMAIL_FROM_ADDR;
+
+    // ── SMTP via PHPMailer (somente se explicitamente ativado) ──
+    if (!empty($smtpConfig['ativo']) && !empty($smtpConfig['host']) && !empty($smtpConfig['usuario']) && !empty($smtpConfig['senha'])) {
+        try {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host       = $smtpConfig['host'];
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $smtpConfig['usuario'];
+            $mail->Password   = $smtpConfig['senha'];
+            $mail->Port       = (int) ($smtpConfig['porta'] ?? 587);
+
+            $enc = strtolower($smtpConfig['encryption'] ?? 'tls');
+            if ($enc === 'ssl') {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            } elseif ($enc === 'tls') {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            } else {
+                $mail->SMTPAutoTLS = false;
+                $mail->SMTPSecure  = false;
+            }
+
+            $mail->setFrom($fromAddr, EMAIL_FROM_NAME);
+            $mail->addReplyTo($fromAddr, EMAIL_FROM_NAME);
+            $mail->addAddress($to);
+            if ($bcc !== '') $mail->addBCC($bcc);
+
+            $mail->CharSet  = 'UTF-8';
+            $mail->isHTML(true);
+            $mail->Subject  = $subject;
+            $mail->Body     = $html;
+
+            $mail->send();
+            return true;
+        } catch (PHPMailerException $e) {
+            error_log('PHPMailer error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    // ── Fallback: mail() nativo ───────────────────────────────
+    // From: deve ser um e-mail do domínio do servidor (SPF).
+    // email_remetente (ex: gmail) vai só no Reply-To.
     $headers  = "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
     $headers .= 'From: ' . EMAIL_FROM_NAME . ' <' . EMAIL_FROM_ADDR . ">\r\n";
-    $headers .= 'Reply-To: ' . EMAIL_FROM_ADDR . "\r\n";
+    if ($fromAddr !== '' && $fromAddr !== EMAIL_FROM_ADDR) {
+        $headers .= 'Reply-To: ' . $fromAddr . "\r\n";
+    }
+    if ($bcc !== '' && $bcc !== EMAIL_FROM_ADDR) {
+        $headers .= 'Bcc: ' . $bcc . "\r\n";
+    }
     $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
-    return mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $html, $headers);
+
+    error_clear_last();
+    $ok = mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $html, $headers);
+    if (!$ok) {
+        $err = error_get_last();
+        error_log('mail() falhou para ' . $to . ': ' . ($err['message'] ?? 'sem detalhe'));
+    }
+    return $ok;
 }
 
-function _buildEmail(string $dataLonga, array $jogadores, string $destinatario): string
+function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, string $mensagem = ''): string
 {
     $corPrimary   = '#0B3C75';
     $corSecundary = '#FFC300';
     $total        = count($jogadores);
 
     if ($destinatario === 'advogada') {
-        $saudacao = 'Prezada Dra.,';
-        $intro    = 'Segue a lista de jogadores confirmados para o treino. Os CPFs estão parcialmente mascarados conforme protocolo de privacidade de dados.';
-        $rodape   = 'Esta lista é destinada ao controle de presença pela assessoria jurídica.';
+        $rodape = 'Esta lista é destinada ao controle de presença pela assessoria jurídica.';
     } else {
-        $saudacao = 'Prezado Clube Esperia,';
-        $intro    = 'Segue a lista oficial de jogadores do OAB Vôlei Clube confirmados para utilização das quadras nesta data. Os dados estão completos para fins de registro e controle de acesso.';
-        $rodape   = 'Lista oficial enviada pelo OAB Vôlei Clube para controle de acesso às instalações do Clube Esperia — Zona Norte, São Paulo.';
+        $rodape = 'Lista oficial enviada pelo OAB Vôlei Clube para controle de acesso às instalações do Clube Esperia — Zona Norte, São Paulo.';
     }
 
     $linhas = '';
@@ -213,8 +309,7 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario):
   <!-- CORPO -->
   <tr>
     <td style="background-color:#ffffff;padding:30px 32px;">
-      <p style="margin:0 0 6px;font-size:16px;color:#212529;font-weight:bold;">' . $saudacao . '</p>
-      <p style="margin:0 0 26px;font-size:13px;color:#6c757d;line-height:1.65;">' . $intro . '</p>
+      ' . ($mensagem ? '<p style="margin:0 0 26px;font-size:14px;color:#212529;line-height:1.75;white-space:pre-line;">' . nl2br(htmlspecialchars(str_replace('{{data}}', $dataLonga, $mensagem))) . '</p>' : '') . '
 
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #dee2e6;border-radius:8px;overflow:hidden;">
         <thead>

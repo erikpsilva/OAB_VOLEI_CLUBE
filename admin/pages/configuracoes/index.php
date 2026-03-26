@@ -11,8 +11,8 @@ $pdo = getDbConnection();
 $manutencaoAtiva = file_exists(ROOT . '/config/maintenance.flag');
 
 $defaults = [
-    'email_admin'          => '',
-    'email_esperia'        => '',
+    'emails_admin'         => '[]',
+    'emails_esperia'       => '[]',
     'disparo_dia_semana'   => '4',
     'disparo_hora'         => '19:00',
     'max_vagas'            => '30',
@@ -48,6 +48,17 @@ $_meses = ['01'=>'Janeiro','02'=>'Fevereiro','03'=>'Março','04'=>'Abril','05'=>
 $proxSextaKey  = $_proxSexta->format('Y-m-d');
 $proxSextaFmt  = $_proxSexta->format('d') . ' de ' . $_meses[$_proxSexta->format('m')];
 $agendaJaLiberada = ($defaults['agenda_liberada_data'] === $proxSextaKey);
+
+$emailsAdmin    = json_decode($defaults['emails_admin'],   true) ?: [];
+$emailsEsperia  = json_decode($defaults['emails_esperia'], true) ?: [];
+$emailRemetente = $defaults['email_remetente']  ?? '';
+$mensagemEmail  = $defaults['mensagem_email']   ?? '';
+$smtpAtivo      = ($defaults['smtp_ativo']      ?? '0') === '1';
+$smtpHost       = $defaults['smtp_host']        ?? '';
+$smtpPorta      = $defaults['smtp_porta']       ?? '587';
+$smtpUsuario    = $defaults['smtp_usuario']     ?? '';
+$smtpSenhaSalva = !empty($defaults['smtp_senha']);
+$smtpEncryption = $defaults['smtp_encryption']  ?? 'tls';
 ?>
 <!DOCTYPE html>
 <html>
@@ -103,6 +114,85 @@ $agendaJaLiberada = ($defaults['agenda_liberada_data'] === $proxSextaKey);
             </div>
             <?php else: ?>
 
+            <!-- ── SMTP ──────────────────────────────────────────────── -->
+            <div class="formGroup configSmtp">
+                <div class="row">
+                    <div class="col-md-12 formGroup__divisor">
+                        <h3>Servidor de <span>E-mail (SMTP)</span></h3>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="configSmtp__toggle">
+                            <label class="configSmtp__toggleLabel">
+                                <input type="checkbox" id="smtpAtivo" <?= $smtpAtivo ? 'checked' : '' ?>>
+                                <span class="configSmtp__toggleSwitch"></span>
+                                Usar SMTP personalizado
+                            </label>
+                            <span class="configSmtp__toggleStatus <?= $smtpAtivo ? '--ativo' : '--inativo' ?>">
+                                <?= $smtpAtivo ? 'Ativo — usando SMTP configurado abaixo' : 'Inativo — usando mail() nativo do servidor' ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="configSmtp__campos" style="<?= !$smtpAtivo ? 'display:none;' : '' ?>">
+                    <div class="col-md-12">
+                        <div class="configPage__infoBox" style="margin-top:12px;">
+                            Para Gmail: host <code>smtp.gmail.com</code>, porta <code>587</code>, criptografia <code>TLS</code>,
+                            usuário seu e-mail e senha um <strong>App Password</strong> gerado na sua conta Google.
+                            <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">Gerar App Password &rarr;</a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="formGroup__item">
+                            <label>Servidor SMTP (host)</label>
+                            <input class="input" type="text" id="smtpHost"
+                                   placeholder="smtp.gmail.com"
+                                   value="<?= htmlspecialchars($smtpHost) ?>" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="formGroup__item">
+                            <label>Porta</label>
+                            <input class="input" type="number" id="smtpPorta"
+                                   placeholder="587"
+                                   value="<?= htmlspecialchars($smtpPorta) ?>" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="formGroup__item">
+                            <label>Criptografia</label>
+                            <select class="input" id="smtpEncryption">
+                                <option value="tls"  <?= $smtpEncryption === 'tls'  ? 'selected' : '' ?>>TLS (porta 587)</option>
+                                <option value="ssl"  <?= $smtpEncryption === 'ssl'  ? 'selected' : '' ?>>SSL (porta 465)</option>
+                                <option value="none" <?= $smtpEncryption === 'none' ? 'selected' : '' ?>>Nenhuma (porta 25)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="formGroup__item">
+                            <label>Usuário SMTP</label>
+                            <input class="input" type="email" id="smtpUsuario"
+                                   placeholder="seu@gmail.com"
+                                   value="<?= htmlspecialchars($smtpUsuario) ?>" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="formGroup__item">
+                            <label>Senha SMTP <?php if ($smtpSenhaSalva): ?><small>(senha salva — deixe em branco para manter)</small><?php endif; ?></label>
+                            <input class="input configSmtp__senha" type="password" id="smtpSenha"
+                                   placeholder="<?= $smtpSenhaSalva ? '••••••••••••' : 'App Password do Gmail' ?>"
+                                   autocomplete="new-password" />
+                        </div>
+                    </div>
+                    </div><!-- /.configSmtp__campos -->
+                </div>
+            </div>
+
             <div class="formGroup">
                 <div class="row">
                     <div class="col-md-12 formGroup__divisor">
@@ -111,22 +201,83 @@ $agendaJaLiberada = ($defaults['agenda_liberada_data'] === $proxSextaKey);
 
                     <div class="col-md-6">
                         <div class="formGroup__item">
-                            <label>E-mail da Coordenação <small>(recebe CPF mascarado)</small></label>
-                            <input class="input" type="email" id="emailAdmin"
-                                   placeholder="email@exemplo.com.br"
-                                   value="<?= htmlspecialchars($defaults['email_admin']) ?>" />
-                            <span class="errorText">Digite um e-mail válido</span>
+                            <label>E-mails da Coordenação <small>(recebem CPF mascarado — até 5)</small></label>
+                            <div class="emailList" id="emailsAdmin">
+                                <?php foreach ($emailsAdmin as $em): ?>
+                                <div class="emailList__item">
+                                    <input class="input emailList__input" type="email"
+                                           placeholder="email@exemplo.com.br"
+                                           value="<?= htmlspecialchars($em) ?>" />
+                                    <button type="button" class="emailList__remove" title="Remover">&times;</button>
+                                </div>
+                                <?php endforeach; ?>
+                                <?php if (empty($emailsAdmin)): ?>
+                                <div class="emailList__item">
+                                    <input class="input emailList__input" type="email"
+                                           placeholder="email@exemplo.com.br" value="" />
+                                    <button type="button" class="emailList__remove" title="Remover">&times;</button>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <button type="button" class="emailList__add"
+                                    data-target="emailsAdmin" data-max="5">+ Adicionar e-mail</button>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="formGroup__item">
-                            <label>E-mail do Clube Esperia <small>(recebe CPF completo)</small></label>
-                            <input class="input" type="email" id="emailEsperia"
-                                   placeholder="email@exemplo.com.br"
-                                   value="<?= htmlspecialchars($defaults['email_esperia']) ?>" />
+                            <label>E-mails do Clube Esperia <small>(recebem CPF completo — até 5)</small></label>
+                            <div class="emailList" id="emailsEsperia">
+                                <?php foreach ($emailsEsperia as $em): ?>
+                                <div class="emailList__item">
+                                    <input class="input emailList__input" type="email"
+                                           placeholder="email@exemplo.com.br"
+                                           value="<?= htmlspecialchars($em) ?>" />
+                                    <button type="button" class="emailList__remove" title="Remover">&times;</button>
+                                </div>
+                                <?php endforeach; ?>
+                                <?php if (empty($emailsEsperia)): ?>
+                                <div class="emailList__item">
+                                    <input class="input emailList__input" type="email"
+                                           placeholder="email@exemplo.com.br" value="" />
+                                    <button type="button" class="emailList__remove" title="Remover">&times;</button>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <button type="button" class="emailList__add"
+                                    data-target="emailsEsperia" data-max="5">+ Adicionar e-mail</button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="formGroup__item">
+                            <label>E-mail do remetente <small>(aparece como "De:" no email enviado)</small></label>
+                            <input class="input" type="email" id="emailRemetente"
+                                   placeholder="noreply@oabvoleiclube.com.br"
+                                   value="<?= htmlspecialchars($emailRemetente) ?>" />
                             <span class="errorText">Digite um e-mail válido</span>
                         </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="formGroup__item">
+                            <label>Mensagem do e-mail <small>(exibida antes da lista de confirmados — opcional)</small></label>
+                            <textarea class="input configPage__textarea" id="mensagemEmail"
+                                      placeholder="Ex: Lista de presença vôlei OAB SANTANA, do dia {{data}} horário a partir das 21h00!"
+                                      rows="4"><?= htmlspecialchars($mensagemEmail) ?></textarea>
+                            <div class="configPage__tagHint">
+                                <strong>Tag disponível:</strong>
+                                <code class="configPage__tag" title="Clique para inserir" data-tag="{{data}}">{{data}}</code>
+                                — substituída pela data do treino (ex: <em>27 de Março de 2026</em>)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 configPage__testeEnvio">
+                        <button class="btn btn--outline" id="btnTestarEnvio" type="button">
+                            &#9993; Testar envio (somente Coordenação)
+                        </button>
+                        <div id="testarEnvioFeedback" class="configPage__feedback" style="display:none;"></div>
                     </div>
 
                     <div class="col-md-12 formGroup__divisor">

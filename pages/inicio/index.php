@@ -55,6 +55,17 @@ $mesesFull = ['01'=>'Janeiro','02'=>'Fevereiro','03'=>'Março','04'=>'Abril','05
               '07'=>'Julho','08'=>'Agosto','09'=>'Setembro','10'=>'Outubro','11'=>'Novembro','12'=>'Dezembro'];
 $dataFormatada = $proximaSexta->format('d') . ' de ' . $mesesFull[$proximaSexta->format('m')] . ' de ' . $proximaSexta->format('Y');
 
+// ── Disparo configurado ────────────────────────────────────────
+$_diasNomes = ['1'=>'segunda-feira','2'=>'terça-feira','3'=>'quarta-feira',
+               '4'=>'quinta-feira','5'=>'sexta-feira','6'=>'sábado','7'=>'domingo'];
+$_diasNomesCap = ['1'=>'Segunda-feira','2'=>'Terça-feira','3'=>'Quarta-feira',
+                  '4'=>'Quinta-feira','5'=>'Sexta-feira','6'=>'Sábado','7'=>'Domingo'];
+$disparoDiaNum  = $config['disparo_dia_semana'] ?? '4';
+$disparoDiaNome = $_diasNomes[$disparoDiaNum]       ?? 'quinta-feira';
+$disparoDiaCap  = $_diasNomesCap[$disparoDiaNum]    ?? 'Quinta-feira';
+[$_h, $_m]     = explode(':', $config['disparo_hora'] ?? '19:00');
+$disparoHoraFmt = ($_m === '00') ? "{$_h}h" : "{$_h}h{$_m}";
+
 $jogadorLogado   = !empty($_SESSION['jogador']);
 $jogadorConfirmou = false;
 $primeiroNome    = '';
@@ -166,14 +177,14 @@ if ($jogadorLogado) {
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">2</div>
                 <div class="homeGuia__step__icon">&#9989;</div>
-                <h3>Confirme até quinta às 18h</h3>
-                <p>Acesse o calendário e confirme sua presença antes do prazo. Máximo de 30 vagas por treino.</p>
+                <h3>Confirme até <?= $disparoDiaCap ?> às <?= $disparoHoraFmt ?></h3>
+                <p>Acesse o calendário e confirme sua presença antes do prazo. Máximo de <?= $maxVagas ?> vagas por treino.</p>
             </div>
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">3</div>
                 <div class="homeGuia__step__icon">&#128274;</div>
-                <h3>Encerramento sexta às 19h</h3>
-                <p>Às 19h da sexta-feira a lista é encerrada automaticamente e enviada para a coordenação do clube.</p>
+                <h3>Encerramento <?= $disparoDiaCap ?> às <?= $disparoHoraFmt ?></h3>
+                <p>Às <?= $disparoHoraFmt ?> de <?= $disparoDiaNome ?> a lista é encerrada automaticamente e enviada para a coordenação do clube.</p>
             </div>
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">4</div>
@@ -195,7 +206,7 @@ if ($jogadorLogado) {
             <div class="homeRegras__item">
                 <span class="homeRegras__item__icon">&#9201;</span>
                 <h4>Prazo de confirmação</h4>
-                <p>Confirme sua presença até <strong>quinta-feira às 18h</strong>. Sem confirmação, sem garantia de vaga.</p>
+                <p>Confirme sua presença até <strong><?= $disparoDiaNome ?> às <?= $disparoHoraFmt ?></strong>. Sem confirmação, sem garantia de vaga.</p>
             </div>
             <div class="homeRegras__item">
                 <span class="homeRegras__item__icon">&#128337;</span>
@@ -232,7 +243,7 @@ if ($jogadorLogado) {
             </div>
             <div class="homeSobre__destaques">
                 <div class="homeSobre__destaque">
-                    <span class="homeSobre__destaque__num">30</span>
+                    <span class="homeSobre__destaque__num"><?= $maxVagas ?></span>
                     <span class="homeSobre__destaque__label">Vagas por treino</span>
                 </div>
                 <div class="homeSobre__destaque">

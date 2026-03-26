@@ -105,6 +105,182 @@
             margin-left: 4px;
         }
     }
+
+    &__textarea {
+        resize: vertical;
+        min-height: 96px;
+        line-height: 1.65;
+        font-family: inherit;
+    }
+
+    &__tagHint {
+        margin-top: 8px;
+        font-size: 12px;
+        color: @color-font-sub;
+        line-height: 1.6;
+
+        em { color: @color-font; }
+    }
+
+    &__tag {
+        display: inline-block;
+        background-color: rgba(11, 60, 117, 0.08);
+        color: @primary;
+        font-size: 12px;
+        font-family: monospace;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px dashed rgba(11, 60, 117, 0.3);
+        cursor: pointer;
+        .transition(0.15s);
+
+        &:hover {
+            background-color: rgba(11, 60, 117, 0.15);
+            border-style: solid;
+        }
+    }
+
+    &__testeEnvio {
+        display: flex;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+}
+
+.btn--outline {
+    background: none;
+    border: 1px solid @primary;
+    color: @primary;
+    font-weight: @semi-bold;
+
+    &:hover { background-color: rgba(11, 60, 117, 0.06); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ── Bloco SMTP ────────────────────────────────────────────────
+.configSmtp {
+    &__toggle {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 0 6px;
+    }
+
+    &__toggleLabel {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        font-weight: @semi-bold;
+        font-size: 14px;
+        color: @color-font;
+        user-select: none;
+
+        input[type="checkbox"] { display: none; }
+
+        input:checked + .configSmtp__toggleSwitch {
+            background-color: @primary;
+            &::after { transform: translateX(18px); }
+        }
+    }
+
+    &__toggleSwitch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px;
+        background-color: @borderColor;
+        border-radius: 22px;
+        flex-shrink: 0;
+        .transition(0.2s background-color);
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            background: @white;
+            border-radius: 50%;
+            .transition(0.2s transform);
+            .shadow(0 1px 3px rgba(0,0,0,0.2));
+        }
+    }
+
+    &__toggleStatus {
+        font-size: 12px;
+        font-weight: @semi-bold;
+        padding: 4px 10px;
+        border-radius: 12px;
+
+        &.--ativo  { background: #d4edda; color: #155724; }
+        &.--inativo { background: #f8f9fa; color: @color-font-sub; }
+    }
+
+    &__campos {
+        width: 100%;
+    }
+
+    &__senha {
+        font-family: monospace;
+        letter-spacing: 1px;
+    }
+}
+
+// ── Lista dinâmica de e-mails ─────────────────────────────────
+.emailList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+    }
+
+    &__remove {
+        flex-shrink: 0;
+        background: none;
+        border: 1px solid @borderColor;
+        border-radius: 6px;
+        color: @color-font-sub;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 6px 10px;
+        .transition(0.15s);
+
+        &:hover {
+            background-color: #fff3f3;
+            border-color: @error;
+            color: @error;
+        }
+    }
+
+    &__add {
+        background: none;
+        border: 1px dashed @primary;
+        border-radius: 6px;
+        color: @primary;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: @semi-bold;
+        padding: 6px 14px;
+        .transition(0.15s);
+
+        &:hover { background-color: rgba(11, 60, 117, 0.05); }
+        &:disabled { opacity: 0.4; cursor: not-allowed; }
+    }
 }
 
 // ── Bloco agenda manual ───────────────────────────────────────
