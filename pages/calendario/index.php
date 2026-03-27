@@ -75,7 +75,7 @@ function statusLabel(string $status): string {
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Calendário de Treinos</title>
+<title>OAB Santana Vôlei Clube - Calendário de Treinos</title>
 <?php include ROOT . '/includes/assets.php'; ?>
 </head>
 <body>

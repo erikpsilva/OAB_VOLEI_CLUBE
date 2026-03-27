@@ -80,7 +80,7 @@ if ($jogadorLogado) {
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Início</title>
+<title>OAB Santana Vôlei Clube - Início</title>
 <?php include ROOT . '/includes/assets.php'; ?>
 </head>
 <body>
@@ -102,9 +102,9 @@ if ($jogadorLogado) {
                     <a href="<?= BASE_URL ?>/calendario" class="homeHero__cta">Confirmar minha presença &rarr;</a>
                 <?php endif; ?>
             <?php else: ?>
-                <span class="homeHero__tag">OAB Vôlei Clube</span>
+                <span class="homeHero__tag">OAB Santana Vôlei Clube</span>
                 <h1>Vôlei, saúde e <span>confraternização</span></h1>
-                <p class="homeHero__sub">Um espaço para advogados e servidores da OAB/SP praticarem esporte toda sexta-feira no Clube Esperia, zona norte de São Paulo.</p>
+                <p class="homeHero__sub">Um espaço para advogados e servidores da OAB Santana praticarem esporte toda sexta-feira no Clube Esperia, zona norte de São Paulo.</p>
                 <a href="<?= BASE_URL ?>/login" class="homeHero__cta">Entrar na plataforma &rarr;</a>
             <?php endif; ?>
         </div>
@@ -237,8 +237,8 @@ if ($jogadorLogado) {
     <div class="container">
         <div class="homeSobre__inner">
             <div class="homeSobre__text">
-                <h2>Sobre o <span>OAB Vôlei Clube</span></h2>
-                <p>O OAB Vôlei Clube reúne advogados, estagiários e servidores da OAB/SP para praticar vôlei toda sexta-feira em um ambiente descontraído e saudável.</p>
+                <h2>Sobre o <span>OAB Santana Vôlei Clube</span></h2>
+                <p>O OAB Santana Vôlei Clube reúne advogados, estagiários e servidores da OAB Santana para praticar vôlei toda sexta-feira em um ambiente descontraído e saudável.</p>
                 <p>Os treinos acontecem nas quadras do <strong>Clube Esperia</strong>, localizado na zona norte de São Paulo, reunindo profissionais do direito que acreditam que esporte e saúde fazem parte de uma carreira equilibrada.</p>
             </div>
             <div class="homeSobre__destaques">

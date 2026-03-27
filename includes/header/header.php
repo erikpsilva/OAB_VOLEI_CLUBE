@@ -4,7 +4,7 @@
             <div class="col-6">
                 <div class="header__logo">
                     <a href="<?= BASE_URL ?>">
-                        <img src="<?= BASE_URL ?>/images/logo.png" alt="OAB Vôlei Clube" />
+                        <img src="<?= BASE_URL ?>/images/logo.png" alt="OAB Santana Vôlei Clube" />
                     </a>
                 </div>
             </div>

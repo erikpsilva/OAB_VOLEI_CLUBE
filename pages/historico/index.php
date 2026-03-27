@@ -51,7 +51,7 @@ $mesesFull = ['01'=>'Janeiro','02'=>'Fevereiro','03'=>'Março','04'=>'Abril','05
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Histórico de Treinos</title>
+<title>OAB Santana Vôlei Clube - Histórico de Treinos</title>
 <?php include ROOT . '/includes/assets.php'; ?>
 </head>
 <body>

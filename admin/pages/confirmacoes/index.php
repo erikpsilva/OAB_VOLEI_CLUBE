@@ -227,6 +227,11 @@ $(document).ready(function () {
     $('#btnEnviar').on('click', function () {
         if (!canSend || currentEncerrado || !currentDate) return;
 
+        var confirmou = confirm(
+            'Atenção!\n\nAo enviar a lista, o treino será ENCERRADO e ninguém mais poderá se inscrever.\n\nDeseja realmente enviar e encerrar as confirmações?'
+        );
+        if (!confirmou) return;
+
         var btn = $(this);
         btn.prop('disabled', true).text('Enviando...');
 

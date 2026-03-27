@@ -19,7 +19,7 @@ use PHPMailer\PHPMailer\Exception as PHPMailerException;
  */
 
 define('LIMITE_VAGAS',    30);
-define('EMAIL_FROM_NAME', 'OAB Vôlei Clube');
+define('EMAIL_FROM_NAME', 'OAB Santana Vôlei Clube');
 define('EMAIL_FROM_ADDR', 'noreply@oabvoleiclube.com.br'); // e-mail criado no cPanel
 
 /**
@@ -110,7 +110,7 @@ function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): ar
     }, $jogadores);
 
     $htmlAdv     = _buildEmail($dataLonga, $listaAdvogada, 'advogada', $mensagemEmail);
-    $subjectAdv  = 'OAB Vôlei Clube — Confirmações de Presença — ' . $dataLonga;
+    $subjectAdv  = 'OAB Santana Vôlei Clube — Confirmações de Presença — ' . $dataLonga;
     $okAdv       = true;
     $primeiroAdv = true;
     foreach ($emailsAdmin as $addr) {
@@ -130,7 +130,7 @@ function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): ar
     }, $jogadores);
 
     $htmlEsp      = _buildEmail($dataLonga, $listaEsperia, 'esperia', $mensagemEmail);
-    $subjectEsp   = 'OAB Vôlei Clube — Lista Oficial de Presença — ' . $dataLonga;
+    $subjectEsp   = 'OAB Santana Vôlei Clube — Lista Oficial de Presença — ' . $dataLonga;
     $okEsp        = true;
     $primeiroEsp  = true;
     foreach ($emailsEsperia as $addr) {
@@ -257,7 +257,7 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, 
     if ($destinatario === 'advogada') {
         $rodape = 'Esta lista é destinada ao controle de presença pela assessoria jurídica.';
     } else {
-        $rodape = 'Lista oficial enviada pelo OAB Vôlei Clube para controle de acesso às instalações do Clube Esperia — Zona Norte, São Paulo.';
+        $rodape = 'Lista oficial enviada pelo OAB Santana Vôlei Clube para controle de acesso às instalações do Clube Esperia — Zona Norte, São Paulo.';
     }
 
     $linhas = '';
@@ -278,7 +278,7 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, 
 
     return '<!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8"><title>OAB Vôlei Clube</title></head>
+<head><meta charset="UTF-8"><title>OAB Santana Vôlei Clube</title></head>
 <body style="margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,Helvetica,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f9;padding:32px 16px;">
 <tr><td align="center">
@@ -289,7 +289,7 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, 
     <td style="background-color:' . $corPrimary . ';padding:28px 32px;border-radius:10px 10px 0 0;">
       <table width="100%" cellpadding="0" cellspacing="0"><tr>
         <td>
-          <div style="font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;">OAB Vôlei Clube</div>
+          <div style="font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;">OAB Santana Vôlei Clube</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:5px;letter-spacing:0.3px;">LISTA DE CONFIRMAÇÕES DE PRESENÇA</div>
         </td>
         <td align="right" style="vertical-align:top;">
@@ -341,7 +341,7 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, 
   <!-- RODAPÉ -->
   <tr>
     <td style="background-color:#f8f9fa;border-top:1px solid #dee2e6;padding:16px 32px;border-radius:0 0 10px 10px;text-align:center;">
-      <p style="margin:0;font-size:11px;color:#adb5bd;">OAB Vôlei Clube &mdash; Este é um e-mail automático, por favor não responda.</p>
+      <p style="margin:0;font-size:11px;color:#adb5bd;">OAB Santana Vôlei Clube &mdash; Este é um e-mail automático, por favor não responda.</p>
     </td>
   </tr>
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<title>OAB Vôlei Clube - Em Manutenção</title>
+<title>OAB Santana Vôlei Clube - Em Manutenção</title>
 <?php include ROOT . '/includes/assets.php'; ?>
 </head>
 <body>

@@ -8,7 +8,7 @@ if (!empty($_SESSION['usuario'])) {
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Admin - Login</title>
+<title>OAB Santana Vôlei Clube - Admin - Login</title>
 
 <?php include ROOT . '/admin/includes/assets.php';?>
 

@@ -63,7 +63,7 @@ $smtpEncryption = $defaults['smtp_encryption']  ?? 'tls';
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Admin - Configurações</title>
+<title>OAB Santana Vôlei Clube - Admin - Configurações</title>
 <?php include ROOT . '/admin/includes/assets.php'; ?>
 </head>
 <body>

@@ -190,7 +190,7 @@ $total = count($jogadores);
 
 <div class="print-header">
     <div>
-        <div class="print-header__org">OAB Vôlei Clube</div>
+        <div class="print-header__org">OAB Santana Vôlei Clube</div>
         <div class="print-header__sub">Clube Esperia — Zona Norte, São Paulo</div>
     </div>
     <div class="print-header__date">
@@ -232,7 +232,7 @@ $total = count($jogadores);
     </div>
     <div class="print-footer__assinatura">
         <div class="print-footer__assinatura__linha"></div>
-        Coordenação OAB Vôlei Clube
+        Coordenação OAB Santana Vôlei Clube
     </div>
 </div>
 

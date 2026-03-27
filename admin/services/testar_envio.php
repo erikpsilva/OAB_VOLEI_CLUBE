@@ -84,7 +84,7 @@ $lista = array_map(function ($j) {
 }, $jogadores);
 
 // ── Monta e envia email de teste ──────────────────────────────
-$subject = '[TESTE] OAB Vôlei Clube — Confirmações de Presença — ' . $dataLonga;
+$subject = '[TESTE] OAB Santana Vôlei Clube — Confirmações de Presença — ' . $dataLonga;
 $html    = _buildEmail($dataLonga, $lista, 'advogada', $mensagemEmail);
 
 $ok       = true;

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Login</title>
+<title>OAB Santana Vôlei Clube - Login</title>
 
 <?php include ROOT . '/includes/assets.php';?>
 

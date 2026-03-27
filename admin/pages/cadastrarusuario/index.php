@@ -8,7 +8,7 @@ if ($_SESSION['usuario']['nivel_acesso'] !== 'admin') {
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Admin - Cadastro de Usuários</title>
+<title>OAB Santana Vôlei Clube - Admin - Cadastro de Usuários</title>
 <?php include ROOT . '/admin/includes/assets.php'; ?>
 </head>
 <body>

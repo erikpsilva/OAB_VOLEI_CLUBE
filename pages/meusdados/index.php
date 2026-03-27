@@ -10,7 +10,7 @@ $sobrenome = $partes[1] ?? '';
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Meus Dados</title>
+<title>OAB Santana Vôlei Clube - Meus Dados</title>
 <?php include ROOT . '/includes/assets.php'; ?>
 </head>
 <body>

@@ -7,7 +7,7 @@ if ($isProducao) {
     define('DB_HOST', 'localhost');
     define('DB_NAME', 'oabvoleiclube_oab_db');
     define('DB_USER', 'oabvoleiclube');
-    define('DB_PASS', 'theking@9913');
+    define('DB_PASS', 'Theking!@389518');
 } else {
     define('DB_HOST', 'localhost');
     define('DB_NAME', 'oab_bd');

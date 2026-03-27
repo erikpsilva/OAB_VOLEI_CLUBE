@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>OAB Vôlei Clube - Contato</title>
+<title>OAB Santana Vôlei Clube - Contato</title>
 
 <?php include ROOT . '/includes/assets.php';?>
 
