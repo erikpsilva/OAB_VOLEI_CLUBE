@@ -84,7 +84,7 @@ function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): ar
 
     // ── Busca confirmados ─────────────────────────────────────────
     $stmt = $pdo->prepare("
-        SELECT j.nome_completo, j.cpf, j.telefone
+        SELECT j.nome_completo, j.cpf
         FROM confirmacoes_treino ct
         JOIN jogadores j ON j.id = ct.jogador_id
         WHERE ct.data_treino = ?
@@ -105,7 +105,6 @@ function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): ar
         return [
             'nome_completo' => $j['nome_completo'],
             'cpf'           => _formatCpf($j['cpf'] ?? ''),
-            'telefone'      => _formatTelefone($j['telefone'] ?? ''),
         ];
     }, $jogadores);
 
@@ -125,7 +124,6 @@ function enviarConfirmacoes(string $data, PDO $pdo, bool $autoEnvio = false): ar
         return [
             'nome_completo' => $j['nome_completo'],
             'cpf'           => _formatCpf($j['cpf'] ?? ''),
-            'telefone'      => _formatTelefone($j['telefone'] ?? ''),
         ];
     }, $jogadores);
 
@@ -268,12 +266,11 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, 
           <td style="padding:10px 14px;border-bottom:1px solid #e9ecef;font-size:13px;color:#6c757d;text-align:center;width:36px;">' . ($i + 1) . '</td>
           <td style="padding:10px 14px;border-bottom:1px solid #e9ecef;font-size:13px;color:#212529;font-weight:600;">' . htmlspecialchars($j['nome_completo']) . '</td>
           <td style="padding:10px 14px;border-bottom:1px solid #e9ecef;font-size:13px;color:#495057;font-family:monospace;">' . htmlspecialchars($j['cpf']) . '</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #e9ecef;font-size:13px;color:#495057;">' . htmlspecialchars($j['telefone'] ?: '—') . '</td>
         </tr>';
     }
 
     if ($total === 0) {
-        $linhas = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#6c757d;font-size:13px;">Nenhum jogador confirmado para este treino.</td></tr>';
+        $linhas = '<tr><td colspan="3" style="padding:20px;text-align:center;color:#6c757d;font-size:13px;">Nenhum jogador confirmado para este treino.</td></tr>';
     }
 
     return '<!DOCTYPE html>
@@ -317,7 +314,6 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, 
             <th style="padding:10px 14px;text-align:center;font-size:11px;color:rgba(255,255,255,0.8);font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;width:36px;">#</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:rgba(255,255,255,0.8);font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Nome Completo</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:rgba(255,255,255,0.8);font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">CPF</th>
-            <th style="padding:10px 14px;text-align:left;font-size:11px;color:rgba(255,255,255,0.8);font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Telefone</th>
           </tr>
         </thead>
         <tbody>' . $linhas . '</tbody>

@@ -91,9 +91,10 @@ $(function () {
         $btn.prop('disabled', true).text('Salvando...');
         $feedback.hide();
 
-        var emailRemetente = $.trim($('#emailRemetente').val());
-        var mensagemEmail  = $('#mensagemEmail').val();
-        var smtpAtivo      = $('#smtpAtivo').is(':checked') ? '1' : '0';
+        var emailRemetente  = $.trim($('#emailRemetente').val());
+        var mensagemEmail   = $('#mensagemEmail').val();
+        var exibirListaHome = $('#exibirListaHome').is(':checked') ? '1' : '0';
+        var smtpAtivo       = $('#smtpAtivo').is(':checked') ? '1' : '0';
         var smtpHost       = $.trim($('#smtpHost').val());
         var smtpPorta      = $.trim($('#smtpPorta').val()) || '587';
         var smtpEncryption = $('#smtpEncryption').val();
@@ -124,6 +125,7 @@ $(function () {
                 disparo_dia_semana:   disparoDia,
                 disparo_hora:         disparoHora,
                 max_vagas:            maxVagas,
+                exibir_lista_home:    exibirListaHome,
                 modo_abertura_agenda: modoAbertura,
             },
             success: function (res) {
@@ -142,6 +144,10 @@ $(function () {
     });
 
     // ── Toggle SMTP ────────────────────────────────────────────
+    $('#exibirListaHome').on('change', function () {
+        $('#exibirListaHomeLabel').text($(this).is(':checked') ? 'Visível para todos' : 'Oculta');
+    });
+
     $('#smtpAtivo').on('change', function () {
         var ativo = $(this).is(':checked');
         $('.configSmtp__campos').toggle(ativo);

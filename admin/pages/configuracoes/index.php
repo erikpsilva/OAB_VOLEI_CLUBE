@@ -16,6 +16,7 @@ $defaults = [
     'disparo_dia_semana'   => '4',
     'disparo_hora'         => '19:00',
     'max_vagas'            => '30',
+    'exibir_lista_home'    => '1',
     'modo_abertura_agenda' => 'automatico',
     'agenda_liberada_data' => '',
 ];
@@ -332,6 +333,21 @@ $smtpEncryption = $defaults['smtp_encryption']  ?? 'tls';
                             <input class="input" type="number" id="maxVagas" min="1" max="200"
                                    value="<?= (int) $defaults['max_vagas'] ?>" />
                             <span class="errorText">Informe um número válido (mínimo 1)</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <div class="formGroup__item">
+                            <label>Lista de confirmados na página inicial</label>
+                            <div class="configToggleRow">
+                                <label class="configSmtp__toggleLabel">
+                                    <input type="checkbox" id="exibirListaHome" <?= ($defaults['exibir_lista_home'] ?? '1') === '1' ? 'checked' : '' ?>>
+                                    <span class="configSmtp__toggleSwitch"></span>
+                                </label>
+                                <span class="configToggleRow__label" id="exibirListaHomeLabel">
+                                    <?= ($defaults['exibir_lista_home'] ?? '1') === '1' ? 'Visível para todos' : 'Oculta' ?>
+                                </span>
+                            </div>
                         </div>
                     </div>
 

@@ -160,6 +160,29 @@
         }
     }
 
+    &.--cancelavel {
+        cursor: pointer !important;
+
+        &:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.18);
+        }
+    }
+
+    &__badge {
+        display: block;
+        margin-top: 8px;
+        font-size: 11px;
+        font-weight: @semi-bold;
+        color: @green;
+        letter-spacing: 0.3px;
+
+        .--cancelavel & {
+            color: @tertiary;
+            cursor: pointer;
+        }
+    }
+
     &__holiday {
         font-weight: bold;;
         font-size: 14px;
@@ -296,5 +319,19 @@
 
             &:hover { background-color: darken(@primary, 8%); }
         }
+
+        &.--excluir {
+            background-color: @tertiary;
+            color: @white;
+
+            &:hover { background-color: darken(@tertiary, 8%); }
+        }
+    }
+
+    .--aviso {
+        font-size: 13px;
+        color: @tertiary;
+        margin-top: -12px;
+        margin-bottom: 24px;
     }
 }

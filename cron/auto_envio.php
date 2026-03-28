@@ -45,9 +45,9 @@ if ($minAgora < $minConf) {
     exit;
 }
 
-// Calcula a próxima sexta-feira a partir do dia de disparo
+// Calcula a sexta-feira do treino a partir do dia de disparo
+// Se o disparo é na própria sexta (offset=0), usa hoje mesmo
 $offsetParaSexta = (5 - $disparoDia + 7) % 7;
-if ($offsetParaSexta === 0) $offsetParaSexta = 7;
 $friday    = (clone $today)->modify("+{$offsetParaSexta} day");
 $fridayKey = $friday->format('Y-m-d');
 

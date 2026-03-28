@@ -30,6 +30,16 @@ $stmt = $pdo->prepare("SELECT COUNT(*) FROM confirmacoes_treino WHERE data_trein
 $stmt->execute([$proximaKey]);
 $totalConfirmados = (int) $stmt->fetchColumn();
 
+$stmtNomes = $pdo->prepare("
+    SELECT j.nome_completo
+    FROM confirmacoes_treino ct
+    JOIN jogadores j ON j.id = ct.jogador_id
+    WHERE ct.data_treino = ?
+    ORDER BY j.nome_completo
+");
+$stmtNomes->execute([$proximaKey]);
+$confirmadosNomes = $stmtNomes->fetchAll(PDO::FETCH_COLUMN);
+
 $stmtEnc = $pdo->prepare("SELECT 1 FROM treinos_encerrados WHERE data_treino = ? LIMIT 1");
 $stmtEnc->execute([$proximaKey]);
 $isEncerrado = (bool) $stmtEnc->fetch();
@@ -76,6 +86,18 @@ if ($jogadorLogado) {
     $stmtC->execute([$_SESSION['jogador']['id'], $proximaKey]);
     $jogadorConfirmou = (bool) $stmtC->fetch();
 }
+
+// Verifica se o treino está em curso (email enviado ou horário de disparo já passou)
+$_disparoHoraRaw = $config['disparo_hora'] ?? '13:00';
+$_agoraHome      = new DateTime();
+$isEmCursoHome   = $isEncerrado || ($isSexta && $_agoraHome->format('H:i') >= $_disparoHoraRaw);
+
+// Pode confirmar se logado, não confirmou, há vagas e o treino ainda está aberto
+$podeConfirmarHome = $jogadorLogado && !$jogadorConfirmou && !$isEmCursoHome
+                     && !$isLotado && in_array($statusTreino, ['aberto', 'hoje']);
+
+// Pode cancelar se confirmou e o treino ainda não está em curso
+$podeCancelarHome = $jogadorConfirmou && !$isEmCursoHome;
 ?>
 <!DOCTYPE html>
 <html>
@@ -98,8 +120,11 @@ if ($jogadorLogado) {
                 <p class="homeHero__sub">Pronto para mais uma sexta-feira de vôlei?</p>
                 <?php if ($jogadorConfirmou): ?>
                     <div class="homeHero__confirmado">&#10003; Você já está confirmado no próximo treino</div>
-                <?php elseif ($statusTreino === 'aberto'): ?>
-                    <a href="<?= BASE_URL ?>/calendario" class="homeHero__cta">Confirmar minha presença &rarr;</a>
+                    <?php if ($podeCancelarHome): ?>
+                        <button class="homeHero__cancelar" id="btnCancelarHero" data-date="<?= $proximaKey ?>">Cancelar confirmação</button>
+                    <?php endif; ?>
+                <?php elseif ($podeConfirmarHome): ?>
+                    <button class="homeHero__cta" id="btnAbrirConfirmarHero">Confirmar minha presença &rarr;</button>
                 <?php endif; ?>
             <?php else: ?>
                 <span class="homeHero__tag">OAB Santana Vôlei Clube</span>
@@ -149,10 +174,15 @@ if ($jogadorLogado) {
 
                 <?php if ($jogadorLogado && $statusTreino === 'aguardando'): ?>
                     <p class="homeTreino__vagas__restantes --esgotado">Aguardando abertura pelo admin</p>
-                <?php elseif ($jogadorLogado && $statusTreino === 'aberto' && !$jogadorConfirmou): ?>
-                    <a href="<?= BASE_URL ?>/calendario" class="btn btn--primary homeTreino__btn">Confirmar presença</a>
+                <?php elseif ($podeConfirmarHome): ?>
+                    <button class="btn btn--primary homeTreino__btn" id="btnAbrirConfirmarHome">Confirmar presença</button>
                 <?php elseif ($jogadorLogado && $jogadorConfirmou): ?>
-                    <div class="homeTreino__confirmado">&#10003; Você está confirmado!</div>
+                    <div class="homeTreino__acoes">
+                        <div class="homeTreino__confirmado">&#10003; Você está confirmado!</div>
+                        <?php if ($podeCancelarHome): ?>
+                            <button class="homeTreino__cancelar" id="btnCancelarTreino" data-date="<?= $proximaKey ?>">Cancelar</button>
+                        <?php endif; ?>
+                    </div>
                 <?php elseif (!$jogadorLogado): ?>
                     <a href="<?= BASE_URL ?>/login" class="btn btn--primary homeTreino__btn">Entrar para confirmar</a>
                 <?php endif; ?>
@@ -160,6 +190,22 @@ if ($jogadorLogado) {
         </div>
     </div>
 </section>
+
+<!-- ══ LISTA DE CONFIRMADOS ══════════════════════════════════════ -->
+<?php if (!empty($confirmadosNomes) && ($config['exibir_lista_home'] ?? '1') === '1'): ?>
+<section class="homeConfirmados">
+    <div class="container">
+        <h2 class="homeSection__title">Confirmados para o <span>Próximo Treino</span></h2>
+        <p class="homeSection__sub"><?= count($confirmadosNomes) ?> jogador<?= count($confirmadosNomes) !== 1 ? 'es confirmados' : ' confirmado' ?> para sexta-feira, <?= $dataFormatada ?>.</p>
+
+        <ol class="homeConfirmados__lista">
+            <?php foreach ($confirmadosNomes as $nome): ?>
+                <li class="homeConfirmados__item"><?= htmlspecialchars($nome) ?></li>
+            <?php endforeach; ?>
+        </ol>
+    </div>
+</section>
+<?php endif; ?>
 
 <!-- ══ COMO FUNCIONA ═════════════════════════════════════════════ -->
 <section class="homeGuia">
@@ -190,7 +236,7 @@ if ($jogadorLogado) {
                 <div class="homeGuia__step__num">4</div>
                 <div class="homeGuia__step__icon">&#127944;</div>
                 <h3>Treino na sexta-feira</h3>
-                <p>Apareça no Clube Esperia, zona norte de SP, e aproveite mais um treino com os colegas da OAB!</p>
+                <p>Apareça no Clube Esperia, zona norte de SP. O treino acontece das <strong>21h às 22h30</strong> — horário fixo toda sexta-feira.</p>
             </div>
         </div>
     </div>
@@ -254,6 +300,10 @@ if ($jogadorLogado) {
                     <span class="homeSobre__destaque__num">6ª</span>
                     <span class="homeSobre__destaque__label">Toda sexta-feira</span>
                 </div>
+                <div class="homeSobre__destaque">
+                    <span class="homeSobre__destaque__num">21h</span>
+                    <span class="homeSobre__destaque__label">às 22h30 — horário fixo</span>
+                </div>
             </div>
         </div>
     </div>
@@ -261,6 +311,92 @@ if ($jogadorLogado) {
 
 <?php include ROOT . '/includes/footer/footer.php'; ?>
 <?php include ROOT . '/includes/scripts.php'; ?>
+
+<?php if ($podeConfirmarHome): ?>
+<!-- MODAL CONFIRMAR PRESENÇA (home) -->
+<div class="confirmModal" id="homeConfirmModal">
+    <div class="confirmModal__box">
+        <h3 class="confirmModal__title">Confirmar presença</h3>
+        <p class="confirmModal__text">Você confirma que irá comparecer ao treino do dia <strong><?= $dataFormatada ?></strong>?</p>
+        <label class="confirmModal__check">
+            <input type="checkbox" id="homeConfirmCheck" />
+            Eu confirmo minha presença
+        </label>
+        <div class="confirmModal__actions">
+            <button class="confirmModal__btn --cancelar" id="btnFecharConfirmarHome">Cancelar</button>
+            <button class="confirmModal__btn --enviar" id="btnEnviarConfirmarHome">Confirmar</button>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var BASE_URL = "<?= BASE_URL ?>";
+    var dataKey  = "<?= $proximaKey ?>";
+
+    function abrirModal() {
+        $('#homeConfirmCheck').prop('checked', false);
+        $('#homeConfirmModal').addClass('--open');
+    }
+
+    $(document).ready(function () {
+        $('#btnAbrirConfirmarHome, #btnAbrirConfirmarHero').on('click', abrirModal);
+
+        $('#btnFecharConfirmarHome').on('click', function () {
+            $('#homeConfirmModal').removeClass('--open');
+        });
+
+        $('#homeConfirmModal').on('click', function (e) {
+            if ($(e.target).is('#homeConfirmModal')) {
+                $('#homeConfirmModal').removeClass('--open');
+            }
+        });
+
+        $('#btnEnviarConfirmarHome').on('click', function () {
+            if (!$('#homeConfirmCheck').is(':checked')) {
+                alert('Marque o checkbox para confirmar sua presença.');
+                return;
+            }
+            $('body').append('<div class="overlay overlayForm"><div class="loader"></div></div>');
+            $.post(BASE_URL + '/services/confirmar_presenca.php', { data_treino: dataKey }, function (res) {
+                $('.overlayForm').remove();
+                $('#homeConfirmModal').removeClass('--open');
+                alert(res.message);
+                if (res.success) location.reload();
+            }, 'json').fail(function (xhr) {
+                $('.overlayForm').remove();
+                alert(xhr.responseJSON?.message || 'Erro ao confirmar presença.');
+            });
+        });
+    });
+})();
+</script>
+<?php endif; ?>
+
+<?php if ($podeCancelarHome): ?>
+<script>
+(function () {
+    var BASE_URL = "<?= BASE_URL ?>";
+    var dataKey  = "<?= $proximaKey ?>";
+
+    function cancelarConfirmacao() {
+        if (!confirm('Tem certeza que deseja cancelar sua confirmação?\n\nSua vaga será liberada para outros participantes.')) return;
+        $('body').append('<div class="overlay overlayForm"><div class="loader"></div></div>');
+        $.post(BASE_URL + '/services/cancelar_presenca.php', { data_treino: dataKey }, function (res) {
+            $('.overlayForm').remove();
+            alert(res.message);
+            if (res.success) location.reload();
+        }, 'json').fail(function (xhr) {
+            $('.overlayForm').remove();
+            alert(xhr.responseJSON?.message || 'Erro ao cancelar confirmação.');
+        });
+    }
+
+    $(document).ready(function () {
+        $('#btnCancelarHero, #btnCancelarTreino').on('click', cancelarConfirmacao);
+    });
+})();
+</script>
+<?php endif; ?>
 
 </body>
 </html>

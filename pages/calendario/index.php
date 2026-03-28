@@ -4,7 +4,8 @@ if (empty($_SESSION['jogador'])) {
     exit;
 }
 
-$today = new DateTime();
+$now   = new DateTime(); // hora atual
+$today = clone $now;
 $today->setTime(0, 0, 0);
 $year  = (int) $today->format('Y');
 
@@ -16,6 +17,7 @@ $config   = getAppConfig($pdo);
 $maxVagas           = (int) $config['max_vagas'];
 $modoAbertura       = $config['modo_abertura_agenda'] ?? 'automatico';
 $agendaLiberadaData = $config['agenda_liberada_data'] ?? '';
+$disparoHora        = $config['disparo_hora'] ?? '13:00'; // horário configurado de disparo
 
 // Verifica se o jogador logado é favorito
 $isFavoritoLogado = false;
@@ -35,6 +37,14 @@ foreach ($stmt->fetchAll() as $row) {
 $stmtEnc  = $pdo->query("SELECT data_treino FROM treinos_encerrados");
 $encerrados = array_flip($stmtEnc->fetchAll(PDO::FETCH_COLUMN));
 
+// Datas que o jogador logado já confirmou
+$confirmacoesUsuario = [];
+if (!empty($_SESSION['jogador'])) {
+    $stmtMinha = $pdo->prepare("SELECT data_treino FROM confirmacoes_treino WHERE jogador_id = ? AND data_treino LIKE ?");
+    $stmtMinha->execute([$_SESSION['jogador']['id'], "$year-%"]);
+    $confirmacoesUsuario = array_flip($stmtMinha->fetchAll(PDO::FETCH_COLUMN));
+}
+
 // ── GERA TODAS AS SEXTAS-FEIRAS DO ANO ───────────────────────
 $fridays = [];
 $date = new DateTime("$year-01-01");
@@ -50,9 +60,18 @@ $meses = ['01'=>'Jan','02'=>'Fev','03'=>'Mar','04'=>'Abr','05'=>'Mai','06'=>'Jun
           '07'=>'Jul','08'=>'Ago','09'=>'Set','10'=>'Out','11'=>'Nov','12'=>'Dez'];
 
 // ── LÓGICA DE STATUS ─────────────────────────────────────────
-function getStatus(DateTime $friday, DateTime $today): string {
-    if ($friday < $today)  return 'concluido';
-    if ($friday == $today) return 'em_curso';
+// $now   = DateTime com hora atual
+// $disparoHora = string "HH:MM" do horário configurado de disparo
+function getStatus(DateTime $friday, DateTime $today, DateTime $now, string $disparoHora): string {
+    if ($friday < $today) return 'concluido';
+
+    if ($friday == $today) {
+        // Em curso somente se o horário de disparo já passou
+        // (o encerramento por email enviado é tratado no loop abaixo)
+        if ($now->format('H:i') >= $disparoHora) return 'em_curso';
+        // Antes do disparo: ainda no período de confirmação
+        return 'disponivel';
+    }
 
     $monday = (clone $friday)->modify('-4 days');
     if ($today >= $monday && $today < $friday) return 'disponivel';
@@ -112,9 +131,12 @@ function statusLabel(string $status): string {
         <div class="calendario__grid" id="calendarioGrid">
             <?php foreach ($fridays as $friday):
                 $key    = $friday->format('Y-m-d');
-                $status = getStatus($friday, $today);
-                if (isset($encerrados[$key]) && !in_array($status, ['concluido'])) {
-                    $status = 'encerrado';
+                $isHoje = ($friday == $today);
+                $status = getStatus($friday, $today, $now, $disparoHora);
+                if (isset($encerrados[$key]) && $status !== 'concluido') {
+                    // Email enviado hoje (admin ou cron) → em curso
+                    // Email enviado para treino futuro (encerramento antecipado) → encerrado
+                    $status = $isHoje ? 'em_curso' : 'encerrado';
                 } elseif ($status === 'disponivel' && ($counts[$key] ?? 0) >= $maxVagas) {
                     $status = 'lotado';
                 } elseif ($status === 'disponivel' && $modoAbertura === 'manual' && !$isFavoritoLogado && $agendaLiberadaData !== $key) {
@@ -123,9 +145,25 @@ function statusLabel(string $status): string {
                 $dia   = $friday->format('d');
                 $mes   = $meses[$friday->format('m')];
                 $label = $dia . '/' . $friday->format('m') . '/' . $friday->format('Y');
+
+                $usuarioConfirmou = isset($confirmacoesUsuario[$key]);
+                // Pode cancelar se confirmou e o treino ainda não está em curso/encerrado/concluido
+                $podeCancelar = $usuarioConfirmou && !in_array($status, ['em_curso', 'concluido', 'encerrado']);
+                // Pode confirmar se disponível e ainda não confirmou
+                $podeConfirmar = ($status === 'disponivel' && !$usuarioConfirmou);
+
+                $extraClasses = '';
+                if ($podeConfirmar)  $extraClasses .= ' --clicavel';
+                if ($podeCancelar)   $extraClasses .= ' --cancelavel';
+                if ($usuarioConfirmou && !in_array($status, ['concluido'])) $extraClasses .= ' --tem-confirmacao';
+
+                $dataAttrs = '';
+                if ($podeConfirmar || $podeCancelar) {
+                    $dataAttrs = "data-date=\"{$key}\" data-label=\"{$label}\"";
+                }
             ?>
-            <div class="calendarioBox --<?= $status ?><?= $status === 'disponivel' ? ' --clicavel' : '' ?>"
-                 <?= $status === 'disponivel' ? "data-date=\"{$key}\" data-label=\"{$label}\"" : '' ?>
+            <div class="calendarioBox --<?= $status ?><?= $extraClasses ?>"
+                 <?= $dataAttrs ?>
                  <?= $status === 'aguardando' ? 'title="As confirmações para este treino ainda não foram abertas pelo administrador."' : '' ?>>
 
                 <div class="calendarioBox__date">
@@ -134,10 +172,26 @@ function statusLabel(string $status): string {
                 </div>
                 <p class="calendarioBox__weekday">Sexta-feira</p>
                 <span class="calendarioBox__status"><?= statusLabel($status) ?></span>
+                <?php if ($usuarioConfirmou && !in_array($status, ['concluido'])): ?>
+                    <span class="calendarioBox__badge">&#10003; Confirmado<?= $podeCancelar ? ' · Cancelar' : '' ?></span>
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
         </div>
 
+    </div>
+</div>
+
+<!-- MODAL CANCELAMENTO -->
+<div class="confirmModal" id="cancelModal">
+    <div class="confirmModal__box">
+        <h3 class="confirmModal__title">Cancelar confirmação</h3>
+        <p class="confirmModal__text">Tem certeza que deseja cancelar sua confirmação para o treino do dia <strong id="cancelDate"></strong>?</p>
+        <p class="confirmModal__text --aviso">Sua vaga será liberada para outros participantes.</p>
+        <div class="confirmModal__actions">
+            <button class="confirmModal__btn --cancelar" id="btnFecharCancel">Voltar</button>
+            <button class="confirmModal__btn --excluir" id="btnConfirmarCancel">Sim, cancelar</button>
+        </div>
     </div>
 </div>
 

@@ -65,7 +65,7 @@ $dataLonga = $hoje->format('d') . ' de ' . $meses[$hoje->format('m')] . ' de ' .
 
 // ── Busca confirmados atuais ───────────────────────────────────
 $stmt = $pdo->prepare("
-    SELECT j.nome_completo, j.cpf, j.telefone
+    SELECT j.nome_completo, j.cpf
     FROM confirmacoes_treino ct
     JOIN jogadores j ON j.id = ct.jogador_id
     WHERE ct.data_treino = ?
@@ -74,17 +74,15 @@ $stmt = $pdo->prepare("
 $stmt->execute([$dataTreino]);
 $jogadores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// CPF completo para coordenação
 $lista = array_map(function ($j) {
     return [
         'nome_completo' => $j['nome_completo'],
         'cpf'           => _formatCpf($j['cpf'] ?? ''),
-        'telefone'      => _formatTelefone($j['telefone'] ?? ''),
     ];
 }, $jogadores);
 
 // ── Monta e envia email de teste ──────────────────────────────
-$subject = '[TESTE] OAB Santana Vôlei Clube — Confirmações de Presença — ' . $dataLonga;
+$subject = 'OAB Santana Vôlei Clube — Confirmações de Presença — ' . $dataLonga;
 $html    = _buildEmail($dataLonga, $lista, 'advogada', $mensagemEmail);
 
 $ok       = true;

@@ -41,6 +41,7 @@ $disparoDia       = trim($_POST['disparo_dia_semana']   ?? '');
 $disparoHora      = trim($_POST['disparo_hora']         ?? '');
 $maxVagas         = (int) ($_POST['max_vagas']          ?? 0);
 $modoAbertura     = trim($_POST['modo_abertura_agenda'] ?? '');
+$exibirListaHome  = ($_POST['exibir_lista_home'] ?? '0') === '1' ? '1' : '0';
 
 // Normaliza para array e filtra vazios
 $emailsAdmin   = array_values(array_filter(array_map('trim', (array) $emailsAdminRaw)));
@@ -152,6 +153,7 @@ if (trim($smtpSenha) !== '') {
 $stmt->execute(['disparo_dia_semana',  $disparoDia]);
 $stmt->execute(['disparo_hora',        $disparoHora]);
 $stmt->execute(['max_vagas',           (string) $maxVagas]);
+$stmt->execute(['exibir_lista_home',   $exibirListaHome]);
 $stmt->execute(['modo_abertura_agenda', $modoAbertura]);
 
 http_response_code(200);
