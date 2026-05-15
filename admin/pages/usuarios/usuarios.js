@@ -2,7 +2,7 @@ $(function () {
 
     // ── LISTA: clique na linha ─────────────────────────────────
     $(document).on('click', '.usuariosTable__row', function (e) {
-        if ($(e.target).is('a, button, .usuariosTable__star')) return;
+        if ($(e.target).is('a, button, .usuariosTable__star, .btn-toggle-conf')) return;
         window.location.href = $(this).data('href');
     });
 
@@ -23,6 +23,25 @@ $(function () {
         }, 'json').always(function () {
             $btn.prop('disabled', false);
         });
+    });
+
+    // ── Toggle confirmação na próxima sexta ───────────────────
+    $(document).on('click', '.btn-toggle-conf', function (e) {
+        e.stopPropagation();
+        var $btn = $(this).prop('disabled', true);
+        var id   = $btn.data('id');
+        var date = $btn.data('date');
+
+        $.post(ADMIN_BASE_URL + '/services/toggle_confirmacao.php', { jogador_id: id, data_treino: date }, function (res) {
+            if (res.ok) {
+                var isConf = res.acao === 'confirmado';
+                $btn.toggleClass('--conf', isConf)
+                    .html(isConf ? '&#10003; Confirmado' : '+ Confirmar')
+                    .attr('title', isConf ? 'Remover da lista de confirmados' : 'Adicionar à lista de confirmados');
+            } else {
+                alert(res.msg || 'Erro ao alterar confirmação.');
+            }
+        }, 'json').always(function () { $btn.prop('disabled', false); });
     });
 
     // ── EDIÇÃO ─────────────────────────────────────────────────

@@ -1,3 +1,7 @@
+<?php
+$_navAgora = new DateTime();
+$_navAoVivo = ($_navAgora->format('N') == 5 && $_navAgora->format('H:i') >= '21:00');
+?>
 <?php if (!empty($_SESSION['jogador'])): ?>
 <div class="nav__overlay" id="navOverlay"></div>
 <nav class="nav">
@@ -12,6 +16,11 @@
             <li><a href="<?= BASE_URL ?>/calendario" class="nav__item <?= $mainRoute === 'calendario' ? 'active' : '' ?>">Calendário de treinos</a></li>
             <li><a href="<?= BASE_URL ?>/historico" class="nav__item <?= $mainRoute === 'historico' ? 'active' : '' ?>">Histórico de treinos</a></li>
             <li><a href="<?= BASE_URL ?>/meusdados" class="nav__item <?= $mainRoute === 'meusdados' ? 'active' : '' ?>">Meus dados</a></li>
+            <?php if ($_navAoVivo): ?>
+            <li><a href="<?= BASE_URL ?>/treino" class="nav__item nav__item--live <?= $mainRoute === 'treino' ? 'active' : '' ?>">&#9679; Ao Vivo</a></li>
+            <?php else: ?>
+            <li><a href="<?= BASE_URL ?>/treino" class="nav__item <?= $mainRoute === 'treino' ? 'active' : '' ?>">Jogos</a></li>
+            <?php endif; ?>
         </ul>
     </div>
 </nav>

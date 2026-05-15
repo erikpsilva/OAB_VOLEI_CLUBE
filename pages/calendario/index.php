@@ -45,6 +45,31 @@ if (!empty($_SESSION['jogador'])) {
     $confirmacoesUsuario = array_flip($stmtMinha->fetchAll(PDO::FETCH_COLUMN));
 }
 
+// Datas em que o jogador está na fila de espera e posição
+$filaUsuario = [];
+if (!empty($_SESSION['jogador'])) {
+    $stmtFila = $pdo->prepare("SELECT data_treino FROM fila_espera WHERE jogador_id = ? AND data_treino LIKE ?");
+    $stmtFila->execute([$_SESSION['jogador']['id'], "$year-%"]);
+    foreach ($stmtFila->fetchAll(PDO::FETCH_COLUMN) as $dtFila) {
+        $filaUsuario[$dtFila] = true;
+    }
+}
+
+// Posição na fila por data (para as datas em que está na fila)
+$posicaoFila = [];
+if (!empty($filaUsuario)) {
+    foreach (array_keys($filaUsuario) as $dtFila) {
+        $stmtPos = $pdo->prepare("
+            SELECT COUNT(*) FROM fila_espera
+            WHERE data_treino = ? AND inscrito_em <= (
+                SELECT inscrito_em FROM fila_espera WHERE jogador_id = ? AND data_treino = ?
+            )
+        ");
+        $stmtPos->execute([$dtFila, $_SESSION['jogador']['id'], $dtFila]);
+        $posicaoFila[$dtFila] = (int) $stmtPos->fetchColumn();
+    }
+}
+
 // ── GERA TODAS AS SEXTAS-FEIRAS DO ANO ───────────────────────
 $fridays = [];
 $date = new DateTime("$year-01-01");
@@ -112,6 +137,7 @@ function statusLabel(string $status): string {
                 <span class="calendario__legenda__item --em_curso">Em curso</span>
                 <span class="calendario__legenda__item --disponivel">Disponível</span>
                 <span class="calendario__legenda__item --lotado">Lotado</span>
+                <span class="calendario__legenda__item --fila-espera">Fila de espera</span>
                 <span class="calendario__legenda__item --encerrado">Encerrado</span>
                 <span class="calendario__legenda__item --aguardando">Aguardando abertura</span>
                 <span class="calendario__legenda__item --indisponivel">Indisponível</span>
@@ -147,20 +173,25 @@ function statusLabel(string $status): string {
                 $label = $dia . '/' . $friday->format('m') . '/' . $friday->format('Y');
 
                 $usuarioConfirmou = isset($confirmacoesUsuario[$key]);
+                $usuarioNaFila    = isset($filaUsuario[$key]);
                 // Pode cancelar se confirmou e o treino ainda não está em curso/encerrado/concluido
                 $podeCancelar = $usuarioConfirmou && !in_array($status, ['em_curso', 'concluido', 'encerrado']);
                 // Pode confirmar se disponível e ainda não confirmou
                 $podeConfirmar = ($status === 'disponivel' && !$usuarioConfirmou);
+                // Pode entrar na fila se lotado, não confirmou e não está na fila
+                $podeEntrarFila = ($status === 'lotado' && !$usuarioConfirmou && !$usuarioNaFila);
+                // Pode sair da fila se está na fila e treino não encerrado/concluido
+                $podeSairFila = $usuarioNaFila && !in_array($status, ['em_curso', 'concluido', 'encerrado']);
 
                 $extraClasses = '';
                 if ($podeConfirmar)  $extraClasses .= ' --clicavel';
                 if ($podeCancelar)   $extraClasses .= ' --cancelavel';
+                if ($podeEntrarFila) $extraClasses .= ' --fila-clicavel';
+                if ($podeSairFila)   $extraClasses .= ' --fila-sair';
                 if ($usuarioConfirmou && !in_array($status, ['concluido'])) $extraClasses .= ' --tem-confirmacao';
+                if ($usuarioNaFila)  $extraClasses .= ' --na-fila';
 
-                $dataAttrs = '';
-                if ($podeConfirmar || $podeCancelar) {
-                    $dataAttrs = "data-date=\"{$key}\" data-label=\"{$label}\"";
-                }
+                $dataAttrs = "data-date=\"{$key}\" data-label=\"{$label}\"";
             ?>
             <div class="calendarioBox --<?= $status ?><?= $extraClasses ?>"
                  <?= $dataAttrs ?>
@@ -174,11 +205,41 @@ function statusLabel(string $status): string {
                 <span class="calendarioBox__status"><?= statusLabel($status) ?></span>
                 <?php if ($usuarioConfirmou && !in_array($status, ['concluido'])): ?>
                     <span class="calendarioBox__badge">&#10003; Confirmado<?= $podeCancelar ? ' · Cancelar' : '' ?></span>
+                <?php elseif ($usuarioNaFila): ?>
+                    <span class="calendarioBox__badge --fila">&#9201; Fila #<?= $posicaoFila[$key] ?? '?' ?><?= $podeSairFila ? ' · Sair' : '' ?></span>
+                <?php elseif ($podeEntrarFila): ?>
+                    <span class="calendarioBox__badge --entrar-fila">Entrar na fila</span>
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
         </div>
 
+    </div>
+</div>
+
+<!-- MODAL ENTRAR NA FILA -->
+<div class="confirmModal" id="filaEntrarModal">
+    <div class="confirmModal__box">
+        <h3 class="confirmModal__title">Entrar na fila de espera</h3>
+        <p class="confirmModal__text">O treino do dia <strong id="filaEntrarDate"></strong> está lotado.</p>
+        <p class="confirmModal__text">Deseja entrar na fila de espera? Se algum confirmado desistir, você será chamado automaticamente por ordem de chegada.</p>
+        <div class="confirmModal__actions">
+            <button class="confirmModal__btn --cancelar" id="btnFecharFilaEntrar">Cancelar</button>
+            <button class="confirmModal__btn --enviar" id="btnConfirmarFilaEntrar">Entrar na fila</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SAIR DA FILA -->
+<div class="confirmModal" id="filaSairModal">
+    <div class="confirmModal__box">
+        <h3 class="confirmModal__title">Sair da fila de espera</h3>
+        <p class="confirmModal__text">Deseja sair da fila de espera do treino do dia <strong id="filaSairDate"></strong>?</p>
+        <p class="confirmModal__text --aviso">Você perderá sua posição na fila.</p>
+        <div class="confirmModal__actions">
+            <button class="confirmModal__btn --cancelar" id="btnFecharFilaSair">Voltar</button>
+            <button class="confirmModal__btn --excluir" id="btnConfirmarFilaSair">Sim, sair da fila</button>
+        </div>
     </div>
 </div>
 

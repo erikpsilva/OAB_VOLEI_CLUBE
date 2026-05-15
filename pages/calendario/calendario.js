@@ -87,4 +87,74 @@ $(document).ready(function () {
         });
     });
 
+    // ── Modal ENTRAR NA FILA ──────────────────────────────────
+    $(document).on('click', '.calendarioBox.--fila-clicavel', function () {
+        selectedDate = $(this).data('date');
+        const label  = $(this).data('label');
+        $('#filaEntrarDate').text(label);
+        $('#filaEntrarModal').addClass('--open');
+    });
+
+    $('#btnFecharFilaEntrar').on('click', function () {
+        $('#filaEntrarModal').removeClass('--open');
+        selectedDate = null;
+    });
+
+    $('#filaEntrarModal').on('click', function (e) {
+        if ($(e.target).is('#filaEntrarModal')) {
+            $('#filaEntrarModal').removeClass('--open');
+            selectedDate = null;
+        }
+    });
+
+    $('#btnConfirmarFilaEntrar').on('click', function () {
+        $('body').append('<div class="overlay overlayForm"><div class="loader"></div></div>');
+
+        $.post(BASE_URL + '/services/entrar_fila_espera.php', { data_treino: selectedDate }, function (res) {
+            $('.overlayForm').remove();
+            $('#filaEntrarModal').removeClass('--open');
+            alert(res.message);
+            if (res.success) location.reload();
+        }, 'json').fail(function (xhr) {
+            $('.overlayForm').remove();
+            const msg = xhr.responseJSON?.message || 'Erro ao entrar na fila de espera.';
+            alert(msg);
+        });
+    });
+
+    // ── Modal SAIR DA FILA ────────────────────────────────────
+    $(document).on('click', '.calendarioBox.--fila-sair', function () {
+        selectedDate = $(this).data('date');
+        const label  = $(this).data('label');
+        $('#filaSairDate').text(label);
+        $('#filaSairModal').addClass('--open');
+    });
+
+    $('#btnFecharFilaSair').on('click', function () {
+        $('#filaSairModal').removeClass('--open');
+        selectedDate = null;
+    });
+
+    $('#filaSairModal').on('click', function (e) {
+        if ($(e.target).is('#filaSairModal')) {
+            $('#filaSairModal').removeClass('--open');
+            selectedDate = null;
+        }
+    });
+
+    $('#btnConfirmarFilaSair').on('click', function () {
+        $('body').append('<div class="overlay overlayForm"><div class="loader"></div></div>');
+
+        $.post(BASE_URL + '/services/sair_fila_espera.php', { data_treino: selectedDate }, function (res) {
+            $('.overlayForm').remove();
+            $('#filaSairModal').removeClass('--open');
+            alert(res.message);
+            if (res.success) location.reload();
+        }, 'json').fail(function (xhr) {
+            $('.overlayForm').remove();
+            const msg = xhr.responseJSON?.message || 'Erro ao sair da fila de espera.';
+            alert(msg);
+        });
+    });
+
 });

@@ -50,6 +50,19 @@ $proxSextaKey  = $_proxSexta->format('Y-m-d');
 $proxSextaFmt  = $_proxSexta->format('d') . ' de ' . $_meses[$_proxSexta->format('m')];
 $agendaJaLiberada = ($defaults['agenda_liberada_data'] === $proxSextaKey);
 
+// Treino cancelado?
+$treinoCancelado = false;
+try {
+    $stmtCanc = $pdo->prepare("SELECT 1 FROM treinos_cancelados WHERE data_treino = ? LIMIT 1");
+    $stmtCanc->execute([$proxSextaKey]);
+    $treinoCancelado = (bool) $stmtCanc->fetch();
+} catch (Exception $e) {}
+
+// Total de confirmados na próxima sexta
+$stmtTotalConf = $pdo->prepare("SELECT COUNT(*) FROM confirmacoes_treino WHERE data_treino = ?");
+$stmtTotalConf->execute([$proxSextaKey]);
+$totalConfirmadosSexta = (int) $stmtTotalConf->fetchColumn();
+
 $emailsAdmin    = json_decode($defaults['emails_admin'],   true) ?: [];
 $emailsEsperia  = json_decode($defaults['emails_esperia'], true) ?: [];
 $emailRemetente = $defaults['email_remetente']  ?? '';
@@ -396,6 +409,59 @@ $smtpEncryption = $defaults['smtp_encryption']  ?? 'tls';
 
                     <div class="col-md-12">
                         <button class="btn btn--primary" id="btnSalvarConfig">Salvar configurações</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Cancelamento de treino ─────────────────────────────── -->
+            <div class="formGroup configCancelamento <?= $treinoCancelado ? '--cancelado' : '' ?>">
+                <div class="row">
+                    <div class="col-md-12 formGroup__divisor">
+                        <h3>Cancelamento de <span>Treino</span></h3>
+                    </div>
+                    <div class="col-md-8">
+                        <p style="color:#555;font-size:.9rem;margin-bottom:12px;">
+                            Treino de <strong><?= $proxSextaFmt ?></strong> —
+                            <strong><?= $totalConfirmadosSexta ?></strong> jogador(es) confirmado(s).
+                        </p>
+                        <div id="cancelStatus" class="configManutencao__status <?= $treinoCancelado ? '--ativa' : '--inativa' ?>" style="margin-bottom:14px;">
+                            <?= $treinoCancelado
+                                ? '&#9888; Treino CANCELADO — jogadores não poderão confirmar presença'
+                                : '&#10003; Treino normal — confirmações abertas normalmente' ?>
+                        </div>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                            <?php if ($treinoCancelado): ?>
+                                <button class="btn btn--success" id="btnReativarTreino"
+                                        data-date="<?= $proxSextaKey ?>" data-fmt="<?= $proxSextaFmt ?>">
+                                    Reativar treino
+                                </button>
+                            <?php else: ?>
+                                <button class="btn btn--danger" id="btnCancelarTreino"
+                                        data-date="<?= $proxSextaKey ?>" data-fmt="<?= $proxSextaFmt ?>">
+                                    Cancelar treino de <?= $proxSextaFmt ?>
+                                </button>
+                            <?php endif; ?>
+                            <?php if ($totalConfirmadosSexta > 0): ?>
+                            <button class="btn btn--outline" id="btnComunicarCancelamento"
+                                    data-date="<?= $proxSextaKey ?>" data-fmt="<?= $proxSextaFmt ?>">
+                                &#9993; Comunicar cancelamento por e-mail (<?= $totalConfirmadosSexta ?> jogadores)
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="col-md-12" style="margin-top:12px;">
+                        <div id="cancelFeedback" class="configPage__feedback" style="display:none;"></div>
+                    </div>
+                    <!-- Campo de mensagem personalizada (oculto por padrão) -->
+                    <div class="col-md-12" id="cancelMsgBox" style="display:none;margin-top:12px;">
+                        <label style="font-weight:600;display:block;margin-bottom:6px;">Mensagem do comunicado <small>(opcional)</small></label>
+                        <textarea class="input" id="cancelMensagem" rows="3"
+                                  placeholder="O treino desta semana foi cancelado. Até a próxima sexta!"
+                                  style="width:100%;max-width:600px;"></textarea>
+                        <div style="margin-top:8px;display:flex;gap:8px;">
+                            <button class="btn btn--danger" id="btnConfirmarComunicado">Enviar comunicado</button>
+                            <button class="btn btn--gray" id="btnCancelarComunicado">Cancelar</button>
+                        </div>
                     </div>
                 </div>
             </div>

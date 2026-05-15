@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mysql -u root oab_bd)",
+      "Bash(\"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root oab_bd)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root oab_bd -e \"CREATE TABLE IF NOT EXISTS fila_espera \\(id int\\(10\\) UNSIGNED NOT NULL AUTO_INCREMENT, jogador_id int\\(10\\) UNSIGNED NOT NULL, data_treino date NOT NULL, nome_completo varchar\\(150\\) NOT NULL, cpf char\\(11\\) NOT NULL, telefone varchar\\(20\\) NOT NULL DEFAULT '', email varchar\\(150\\) NOT NULL, inscrito_em timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY \\(id\\), UNIQUE KEY uq_jogador_data \\(jogador_id, data_treino\\)\\) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\" 2>&1)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root oabvoleiclube_oab_db -e \"SHOW TABLES;\" 2>&1)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root oabvoleiclube_oab_db -e \"CREATE TABLE IF NOT EXISTS fila_espera \\(id int\\(10\\) UNSIGNED NOT NULL AUTO_INCREMENT, jogador_id int\\(10\\) UNSIGNED NOT NULL, data_treino date NOT NULL, nome_completo varchar\\(150\\) NOT NULL, cpf char\\(11\\) NOT NULL, telefone varchar\\(20\\) NOT NULL DEFAULT '', email varchar\\(150\\) NOT NULL, inscrito_em timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY \\(id\\), UNIQUE KEY uq_jogador_data \\(jogador_id, data_treino\\)\\) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\" 2>&1)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root oabvoleiclube_oab_db -e \"SHOW TABLES LIKE 'fila_espera';\" 2>&1)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root oabvoleiclube_oab_db -e \"DESCRIBE sorteio_estado; DESCRIBE sorteio_times; DESCRIBE sorteio_partidas;\" 2>&1)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root oabvoleiclube_oab_db -e \"SELECT data_treino, LEFT\\(estado_json, 300\\) FROM sorteio_estado LIMIT 3;\" 2>&1)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root oabvoleiclube_oab_db -e \"SELECT data_treino, LEFT\\(times_json, 500\\) FROM sorteio_times LIMIT 2;\" 2>&1)",
+      "Bash(Add-Content -Path \"c:\\\\xampp\\\\htdocs\\\\OAB_VOLEI_CLUBE\\\\styles\\\\style.min.css\" -Encoding utf8 -Value \".homeJogosAnt{padding:10px 0;text-align:right}.homeJogosAnt__link{color:#888;font-size:.85rem;text-decoration:none;transition:color .2s}.homeJogosAnt__link:hover{color:#0055a5}\")"
+    ]
+  }
+}

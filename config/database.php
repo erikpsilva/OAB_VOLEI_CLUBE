@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('America/Sao_Paulo');
+
 $isProducao = strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') === false
            && strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') === false;
 
@@ -7,10 +9,10 @@ if ($isProducao) {
     define('DB_HOST', 'localhost');
     define('DB_NAME', 'oabvoleiclube_oab_db');
     define('DB_USER', 'oabvoleiclube');
-    define('DB_PASS', 'Theking!@389518');
+    define('DB_PASS', 'Theking#@!389518');
 } else {
     define('DB_HOST', 'localhost');
-    define('DB_NAME', 'oab_bd');
+    define('DB_NAME', 'oabvoleiclube_oab_db');
     define('DB_USER', 'root');
     define('DB_PASS', '');
 }

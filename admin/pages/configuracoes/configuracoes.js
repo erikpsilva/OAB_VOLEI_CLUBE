@@ -299,4 +299,74 @@ $(function () {
             .show();
     }
 
+    // ── Cancelar / Reativar treino ─────────────────────────────
+    $(document).on('click', '#btnCancelarTreino, #btnReativarTreino', function () {
+        var $btn    = $(this);
+        var date    = $btn.data('date');
+        var fmt     = $btn.data('fmt');
+        var acao    = $btn.is('#btnCancelarTreino') ? 'cancelar' : 'reativar';
+        var msg     = acao === 'cancelar'
+            ? 'Cancelar o treino de ' + fmt + '? Os jogadores não poderão confirmar presença.'
+            : 'Reativar o treino de ' + fmt + '?';
+
+        if (!confirm(msg)) return;
+        $btn.prop('disabled', true);
+
+        $.post(ADMIN_BASE_URL + '/services/cancelar_treino.php', { data_treino: date, acao: acao }, function (res) {
+            if (res.ok) {
+                var $status = $('#cancelStatus');
+                if (res.cancelado) {
+                    $status.removeClass('--inativa').addClass('--ativa')
+                           .html('&#9888; Treino CANCELADO — jogadores não poderão confirmar presença');
+                    $btn.attr('id', 'btnReativarTreino')
+                        .removeClass('btn--danger').addClass('btn--success')
+                        .text('Reativar treino').prop('disabled', false);
+                } else {
+                    $status.removeClass('--ativa').addClass('--inativa')
+                           .html('&#10003; Treino normal — confirmações abertas normalmente');
+                    $btn.attr('id', 'btnCancelarTreino')
+                        .removeClass('btn--success').addClass('btn--danger')
+                        .text('Cancelar treino de ' + fmt).prop('disabled', false);
+                }
+                $('#cancelFeedback').removeClass('--success --error').addClass('--success')
+                    .text(res.cancelado ? 'Treino marcado como cancelado.' : 'Treino reativado com sucesso.').show();
+                setTimeout(function () { $('#cancelFeedback').fadeOut(); }, 4000);
+            }
+        }, 'json').fail(function () {
+            $('#cancelFeedback').removeClass('--success --error').addClass('--error').text('Erro ao alterar status.').show();
+            $btn.prop('disabled', false);
+        });
+    });
+
+    // ── Comunicar cancelamento ────────────────────────────────
+    $('#btnComunicarCancelamento').on('click', function () {
+        $('#cancelMsgBox').slideDown(200);
+        $('#cancelMensagem').focus();
+    });
+
+    $('#btnCancelarComunicado').on('click', function () {
+        $('#cancelMsgBox').slideUp(200);
+    });
+
+    $('#btnConfirmarComunicado').on('click', function () {
+        var $btn    = $(this).prop('disabled', true).text('Enviando...');
+        var date    = $('#btnComunicarCancelamento').data('date');
+        var msg     = $('#cancelMensagem').val().trim();
+
+        $.post(ADMIN_BASE_URL + '/services/comunicar_cancelamento.php', {
+            data_treino: date,
+            mensagem:    msg
+        }, function (res) {
+            $('#cancelMsgBox').slideUp(200);
+            $('#cancelFeedback').removeClass('--success --error')
+                .addClass(res.success ? '--success' : '--error')
+                .text(res.message).show();
+            setTimeout(function () { $('#cancelFeedback').fadeOut(); }, 6000);
+        }, 'json').fail(function () {
+            $('#cancelFeedback').removeClass('--success --error').addClass('--error').text('Erro ao enviar.').show();
+        }).always(function () {
+            $btn.prop('disabled', false).text('Enviar comunicado');
+        });
+    });
+
 });

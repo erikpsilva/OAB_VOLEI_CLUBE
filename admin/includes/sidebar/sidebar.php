@@ -23,6 +23,34 @@
                 </a>
             </li>
 
+            <li class="sidebar__item">
+                <a href="<?= BASE_URL ?>/admin/filaespera"
+                   class="sidebar__link <?= ($subRoute === 'filaespera') ? 'sidebar__link--active' : '' ?>">
+                    Fila de Espera
+                </a>
+            </li>
+
+            <li class="sidebar__item">
+                <a href="<?= BASE_URL ?>/admin/presenca"
+                   class="sidebar__link <?= ($subRoute === 'presenca') ? 'sidebar__link--active' : '' ?>">
+                    Lista de Presença
+                </a>
+            </li>
+
+            <li class="sidebar__item">
+                <a href="<?= BASE_URL ?>/admin/niveis"
+                   class="sidebar__link <?= ($subRoute === 'niveis') ? 'sidebar__link--active' : '' ?>">
+                    Nível dos Jogadores
+                </a>
+            </li>
+
+            <li class="sidebar__item">
+                <a href="<?= BASE_URL ?>/admin/jogos"
+                   class="sidebar__link <?= ($subRoute === 'jogos') ? 'sidebar__link--active' : '' ?>">
+                    Jogos do Treino
+                </a>
+            </li>
+
             <?php if ($_SESSION['usuario']['nivel_acesso'] === 'admin'): ?>
             <li class="sidebar__item">
                 <a href="<?= BASE_URL ?>/admin/cadastrarusuario"

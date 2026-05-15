@@ -35,8 +35,22 @@ if ($editId && $tipo === 'jogador') {
 
 // ── MODO LISTA ───────────────────────────────────────────────
 if (!$editId) {
-    $admins   = $pdo->query("SELECT id, nome_completo, email, cpf, nivel_acesso, created_at FROM admin_usuarios ORDER BY nome_completo")->fetchAll();
+    $admins    = $pdo->query("SELECT id, nome_completo, email, cpf, nivel_acesso, created_at FROM admin_usuarios ORDER BY nome_completo")->fetchAll();
     $jogadores = $pdo->query("SELECT id, nome_completo, email, cpf, telefone, favorito, created_at FROM jogadores ORDER BY nome_completo")->fetchAll();
+
+    // Próxima sexta-feira para o botão de confirmação
+    $_hoje = new DateTime(); $_hoje->setTime(0,0,0);
+    $proxSexta = clone $_hoje;
+    while ($proxSexta->format('N') != 5) $proxSexta->modify('+1 day');
+    $proxSextaKey = $proxSexta->format('Y-m-d');
+    $_meses = ['01'=>'Jan','02'=>'Fev','03'=>'Mar','04'=>'Abr','05'=>'Mai','06'=>'Jun',
+               '07'=>'Jul','08'=>'Ago','09'=>'Set','10'=>'Out','11'=>'Nov','12'=>'Dez'];
+    $proxSextaFmt = $proxSexta->format('d') . '/' . $_meses[$proxSexta->format('m')];
+
+    // Quem já está confirmado na próxima sexta
+    $stmtConf = $pdo->prepare("SELECT jogador_id FROM confirmacoes_treino WHERE data_treino = ?");
+    $stmtConf->execute([$proxSextaKey]);
+    $confirmadosNaSexta = array_flip($stmtConf->fetchAll(PDO::FETCH_COLUMN));
 }
 
 $deleted = $_GET['deleted'] ?? null; // 'admin' | 'jogador'
@@ -133,6 +147,7 @@ function nivelBadge(string $nivel): string {
                             <th>Telefone</th>
                             <th>Cadastro</th>
                             <th title="Favorito — acesso automático mesmo no modo manual">&#9733;</th>
+                            <th title="Confirmação na próxima sexta (<?= $proxSextaFmt ?>)">Sexta <?= $proxSextaFmt ?></th>
                             <th></th>
                         </tr>
                     </thead>
@@ -154,6 +169,15 @@ function nivelBadge(string $nivel): string {
                                         data-id="<?= $j['id'] ?>"
                                         title="<?= $isFav ? 'Remover dos favoritos' : 'Marcar como favorito' ?>">
                                     <?= $isFav ? '&#9733;' : '&#9734;' ?>
+                                </button>
+                            </td>
+                            <td data-label="Confirmação">
+                                <?php $isConf = isset($confirmadosNaSexta[$j['id']]); ?>
+                                <button class="btn-toggle-conf <?= $isConf ? '--conf' : '' ?>"
+                                        data-id="<?= $j['id'] ?>"
+                                        data-date="<?= $proxSextaKey ?>"
+                                        title="<?= $isConf ? 'Remover da lista de confirmados' : 'Adicionar à lista de confirmados' ?>">
+                                    <?= $isConf ? '&#10003; Confirmado' : '+ Confirmar' ?>
                                 </button>
                             </td>
                             <td><a href="<?= BASE_URL ?>/admin/usuarios?tipo=jogador&id=<?= $j['id'] ?>" class="usuariosTable__btn">Editar</a></td>

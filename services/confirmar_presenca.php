@@ -46,6 +46,24 @@ $stmtFav->execute([$jogador['id']]);
 $favRow     = $stmtFav->fetch();
 $isFavorito = $favRow && (int)$favRow['favorito'] === 1;
 
+// Modo automático: janela de inscrições segunda 10h → sexta 12h
+if ($modoAbertura === 'automatico') {
+    $agora     = new DateTime();
+    $diaSem    = (int) $agora->format('N');
+    $horaAgora = $agora->format('H:i');
+
+    $aberta = false;
+    if ($diaSem === 1 && $horaAgora >= '10:00')    $aberta = true;
+    elseif ($diaSem >= 2 && $diaSem <= 4)           $aberta = true;
+    elseif ($diaSem === 5 && $horaAgora < '12:00')  $aberta = true;
+
+    if (!$aberta) {
+        http_response_code(409);
+        echo json_encode(['success' => false, 'message' => 'As inscrições estão encerradas. Elas abrem toda segunda-feira às 10h e encerram toda sexta-feira às 12h.']);
+        exit;
+    }
+}
+
 // Modo manual: bloqueia não-favoritos se agenda não foi liberada para esta data
 if ($modoAbertura === 'manual' && !$isFavorito) {
     if ($agendaLiberadaData !== $dataTreino) {

@@ -71,4 +71,35 @@ if (!$stmtCheck->fetch()) {
 $stmtDel = $pdo->prepare("DELETE FROM confirmacoes_treino WHERE jogador_id = ? AND data_treino = ?");
 $stmtDel->execute([$jogadorId, $dataTreino]);
 
-echo json_encode(['success' => true, 'message' => 'Sua confirmação foi cancelada. A vaga foi liberada para outros participantes.']);
+// Promove automaticamente o primeiro da fila de espera (por ordem de chegada)
+$stmtFila = $pdo->prepare("
+    SELECT * FROM fila_espera
+    WHERE data_treino = ?
+    ORDER BY inscrito_em ASC
+    LIMIT 1
+");
+$stmtFila->execute([$dataTreino]);
+$proximo = $stmtFila->fetch();
+
+$mensagemExtra = '';
+if ($proximo) {
+    $stmtPromove = $pdo->prepare("
+        INSERT INTO confirmacoes_treino (jogador_id, data_treino, nome_completo, cpf, telefone, email)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+    $stmtPromove->execute([
+        $proximo['jogador_id'],
+        $dataTreino,
+        $proximo['nome_completo'],
+        $proximo['cpf'],
+        $proximo['telefone'],
+        $proximo['email'],
+    ]);
+
+    $stmtRemoveFila = $pdo->prepare("DELETE FROM fila_espera WHERE id = ?");
+    $stmtRemoveFila->execute([$proximo['id']]);
+
+    $mensagemExtra = ' O primeiro da fila de espera foi confirmado automaticamente.';
+}
+
+echo json_encode(['success' => true, 'message' => 'Sua confirmação foi cancelada. A vaga foi liberada para outros participantes.' . $mensagemExtra]);

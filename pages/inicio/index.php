@@ -48,18 +48,48 @@ $isLotado       = !$isEncerrado && $totalConfirmados >= $maxVagas;
 $vagasRestantes = max(0, $maxVagas - $totalConfirmados);
 $progressoPct   = min(100, round($totalConfirmados / $maxVagas * 100));
 
-$diaDaSemana  = (int) $hoje->format('N'); // 1=seg … 7=dom
-$isSexta      = ($hoje == $proximaSexta);
+$diaDaSemana = (int) $hoje->format('N'); // 1=seg … 7=dom
+$isSexta     = ($hoje == $proximaSexta);
 
-// Modo manual: não-favoritos só veem como aberto se a agenda foi liberada para esta sexta
+// Janela de inscrições: abre segunda às 10h, fecha sexta às 12h
+$_agora     = new DateTime();
+$_horaAtual = $_agora->format('H:i');
+
+if ($modoAbertura === 'automatico') {
+    if ($diaDaSemana === 1)                        $inscricaoAberta = $_horaAtual >= '10:00';
+    elseif ($diaDaSemana >= 2 && $diaDaSemana <= 4) $inscricaoAberta = true;
+    elseif ($diaDaSemana === 5)                    $inscricaoAberta = $_horaAtual < '12:00';
+    else                                            $inscricaoAberta = false; // sáb/dom
+} else {
+    // Manual: aberto se admin liberou (favoritos sempre podem)
+    $inscricaoAberta = $isFavoritoLogado || ($agendaLiberadaData === $proximaKey);
+}
+
 $agendaBloqueadaParaEste = ($modoAbertura === 'manual' && !$isFavoritoLogado && $agendaLiberadaData !== $proximaKey);
 
-if ($isEncerrado)                        { $statusTreino = 'encerrado';  $statusLabel = 'Encerrado'; }
-elseif ($isLotado)                       { $statusTreino = 'lotado';     $statusLabel = 'Lotado';    }
-elseif ($isSexta)                        { $statusTreino = 'hoje';       $statusLabel = 'Hoje!';     }
-elseif ($agendaBloqueadaParaEste && $diaDaSemana <= 4) { $statusTreino = 'aguardando'; $statusLabel = 'Aguardando abertura'; }
-elseif ($diaDaSemana <= 4)               { $statusTreino = 'aberto';     $statusLabel = 'Confirmações abertas'; }
-else                                     { $statusTreino = 'em_breve';   $statusLabel = 'Em breve';  }
+if ($isEncerrado) {
+    $statusTreino = 'encerrado'; $statusLabel = 'Encerrado';
+} elseif ($isLotado) {
+    $statusTreino = 'lotado'; $statusLabel = 'Lotado';
+} elseif (!$inscricaoAberta) {
+    if ($diaDaSemana >= 6)                                 { $statusTreino = 'em_breve';         $statusLabel = 'Em breve'; }
+    elseif ($diaDaSemana === 1 && $_horaAtual < '10:00')   { $statusTreino = 'abre_hoje';        $statusLabel = 'Abre às 10h'; }
+    elseif ($modoAbertura === 'manual')                    { $statusTreino = 'aguardando';       $statusLabel = 'Aguardando abertura'; }
+    else                                                    { $statusTreino = 'encerrado_semana'; $statusLabel = 'Inscrições encerradas'; }
+} elseif ($isSexta) {
+    $statusTreino = 'hoje'; $statusLabel = 'Hoje!';
+} else {
+    $statusTreino = 'aberto'; $statusLabel = 'Confirmações abertas';
+}
+
+// Mensagem de contexto sobre o horário de inscrições
+$statusInfo = '';
+if ($modoAbertura === 'automatico' && !$isEncerrado && !$isLotado) {
+    if ($inscricaoAberta && $diaDaSemana === 5)          $statusInfo = 'Inscrições encerram hoje às 12h';
+    elseif ($inscricaoAberta)                            $statusInfo = 'Inscrições abertas até sexta-feira às 12h';
+    elseif ($diaDaSemana === 1 && $_horaAtual < '10:00') $statusInfo = 'Inscrições abrem hoje às 10h';
+    else                                                  $statusInfo = 'Reabertura na próxima segunda às 10h';
+}
 
 $mesesFull = ['01'=>'Janeiro','02'=>'Fevereiro','03'=>'Março','04'=>'Abril','05'=>'Maio','06'=>'Junho',
               '07'=>'Julho','08'=>'Agosto','09'=>'Setembro','10'=>'Outubro','11'=>'Novembro','12'=>'Dezembro'];
@@ -87,16 +117,17 @@ if ($jogadorLogado) {
     $jogadorConfirmou = (bool) $stmtC->fetch();
 }
 
-// Verifica se o treino está em curso (email enviado ou horário de disparo já passou)
-$_disparoHoraRaw = $config['disparo_hora'] ?? '13:00';
-$_agoraHome      = new DateTime();
-$isEmCursoHome   = $isEncerrado || ($isSexta && $_agoraHome->format('H:i') >= $_disparoHoraRaw);
+// Treino "em curso" = após o horário de disparo (lista já foi enviada ao clube)
+$_disparoHoraRaw = $config['disparo_hora'] ?? '14:00';
+$isEmCursoHome   = $isEncerrado || ($isSexta && $_horaAtual >= $_disparoHoraRaw);
 
-// Pode confirmar se logado, não confirmou, há vagas e o treino ainda está aberto
-$podeConfirmarHome = $jogadorLogado && !$jogadorConfirmou && !$isEmCursoHome
-                     && !$isLotado && in_array($statusTreino, ['aberto', 'hoje']);
+// Treino ao vivo: sexta-feira após 21:00 com pelo menos uma confirmação
+$treinoEmAndamento = $isSexta && $_horaAtual >= '21:00';
 
-// Pode cancelar se confirmou e o treino ainda não está em curso
+// Pode confirmar se logado, não confirmou, há vagas e inscrições abertas
+$podeConfirmarHome = $jogadorLogado && !$jogadorConfirmou && !$isLotado && $inscricaoAberta;
+
+// Pode cancelar se confirmou e a lista ainda não foi enviada ao clube
 $podeCancelarHome = $jogadorConfirmou && !$isEmCursoHome;
 ?>
 <!DOCTYPE html>
@@ -136,6 +167,27 @@ $podeCancelarHome = $jogadorConfirmou && !$isEmCursoHome;
     </div>
 </section>
 
+<!-- ══ TREINO AO VIVO ═════════════════════════════════════════════ -->
+<section class="homeLive">
+    <div class="container">
+        <a href="<?= BASE_URL ?>/treino" class="homeLive__card">
+            <div class="homeLive__card__left">
+                <?php if ($treinoEmAndamento): ?>
+                    <span class="homeLive__badge">Ao Vivo</span>
+                    <h3 class="homeLive__title">Treino em andamento!</h3>
+                    <p class="homeLive__sub">Acompanhe os times, jogos e placares em tempo real.</p>
+                <?php else: ?>
+                    <h3 class="homeLive__title">Ver jogos anteriores</h3>
+                    <p class="homeLive__sub">Confira os times, jogos e placares dos treinos passados.</p>
+                <?php endif; ?>
+            </div>
+            <div class="homeLive__card__right">
+                <span class="homeLive__cta"><?= $treinoEmAndamento ? 'Ver ao vivo' : 'Ver jogos' ?> &rarr;</span>
+            </div>
+        </a>
+    </div>
+</section>
+
 <!-- ══ PRÓXIMO TREINO ════════════════════════════════════════════ -->
 <section class="homeTreino">
     <div class="container">
@@ -152,6 +204,9 @@ $podeCancelarHome = $jogadorConfirmou && !$isEmCursoHome;
                     </div>
                 </div>
                 <span class="homeTreino__status --<?= $statusTreino ?>"><?= $statusLabel ?></span>
+                <?php if (!empty($statusInfo)): ?>
+                <small style="display:block;font-size:12px;color:#888;margin-top:6px;">&#128337; <?= $statusInfo ?></small>
+                <?php endif; ?>
             </div>
 
             <div class="homeTreino__card__right">
@@ -217,20 +272,20 @@ $podeCancelarHome = $jogadorConfirmou && !$isEmCursoHome;
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">1</div>
                 <div class="homeGuia__step__icon">&#128197;</div>
-                <h3>Segunda-feira</h3>
-                <p>O calendário de treinos abre para confirmações de presença no início de cada semana.</p>
+                <h3>Segunda-feira às 10h</h3>
+                <p>As inscrições abrem toda segunda-feira às 10h. Garanta sua vaga antes que esgotem!</p>
             </div>
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">2</div>
                 <div class="homeGuia__step__icon">&#9989;</div>
-                <h3>Confirme até <?= $disparoDiaCap ?> às <?= $disparoHoraFmt ?></h3>
-                <p>Acesse o calendário e confirme sua presença antes do prazo. Máximo de <?= $maxVagas ?> vagas por treino.</p>
+                <h3>Confirme até sexta às 12h</h3>
+                <p>Confirme sua presença até sexta-feira ao meio-dia. Máximo de <?= $maxVagas ?> vagas por treino.</p>
             </div>
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">3</div>
                 <div class="homeGuia__step__icon">&#128274;</div>
-                <h3>Encerramento <?= $disparoDiaCap ?> às <?= $disparoHoraFmt ?></h3>
-                <p>Às <?= $disparoHoraFmt ?> de <?= $disparoDiaNome ?> a lista é encerrada automaticamente e enviada para a coordenação do clube.</p>
+                <h3>Encerramento sexta às 12h</h3>
+                <p>Às 12h de sexta-feira as inscrições são encerradas. A lista é enviada ao Clube Esperia às <?= $disparoHoraFmt ?>.</p>
             </div>
             <div class="homeGuia__step">
                 <div class="homeGuia__step__num">4</div>
@@ -252,7 +307,7 @@ $podeCancelarHome = $jogadorConfirmou && !$isEmCursoHome;
             <div class="homeRegras__item">
                 <span class="homeRegras__item__icon">&#9201;</span>
                 <h4>Prazo de confirmação</h4>
-                <p>Confirme sua presença até <strong><?= $disparoDiaNome ?> às <?= $disparoHoraFmt ?></strong>. Sem confirmação, sem garantia de vaga.</p>
+                <p>Confirme sua presença até <strong>sexta-feira às 12h</strong>. Sem confirmação, sem garantia de vaga.</p>
             </div>
             <div class="homeRegras__item">
                 <span class="homeRegras__item__icon">&#128337;</span>

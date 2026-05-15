@@ -263,14 +263,13 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, 
         $bg = ($i % 2 === 0) ? '#ffffff' : '#f8f9fa';
         $linhas .= '
         <tr style="background-color:' . $bg . ';">
-          <td style="padding:10px 14px;border-bottom:1px solid #e9ecef;font-size:13px;color:#6c757d;text-align:center;width:36px;">' . ($i + 1) . '</td>
           <td style="padding:10px 14px;border-bottom:1px solid #e9ecef;font-size:13px;color:#212529;font-weight:600;">' . htmlspecialchars($j['nome_completo']) . '</td>
           <td style="padding:10px 14px;border-bottom:1px solid #e9ecef;font-size:13px;color:#495057;font-family:monospace;">' . htmlspecialchars($j['cpf']) . '</td>
         </tr>';
     }
 
     if ($total === 0) {
-        $linhas = '<tr><td colspan="3" style="padding:20px;text-align:center;color:#6c757d;font-size:13px;">Nenhum jogador confirmado para este treino.</td></tr>';
+        $linhas = '<tr><td colspan="2" style="padding:20px;text-align:center;color:#6c757d;font-size:13px;">Nenhum jogador confirmado para este treino.</td></tr>';
     }
 
     return '<!DOCTYPE html>
@@ -311,23 +310,11 @@ function _buildEmail(string $dataLonga, array $jogadores, string $destinatario, 
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #dee2e6;border-radius:8px;overflow:hidden;">
         <thead>
           <tr style="background-color:' . $corPrimary . ';">
-            <th style="padding:10px 14px;text-align:center;font-size:11px;color:rgba(255,255,255,0.8);font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;width:36px;">#</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:rgba(255,255,255,0.8);font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Nome Completo</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:rgba(255,255,255,0.8);font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">CPF</th>
           </tr>
         </thead>
         <tbody>' . $linhas . '</tbody>
-      </table>
-
-      <!-- TOTAL -->
-      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
-        <tr>
-          <td style="background-color:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;padding:12px 16px;">
-            <span style="font-size:13px;color:#6c757d;">Total confirmado: </span>
-            <span style="font-size:17px;font-weight:bold;color:' . $corPrimary . ';">' . $total . '</span>
-            <span style="font-size:12px;color:#adb5bd;"> / ' . LIMITE_VAGAS . ' vagas</span>
-          </td>
-        </tr>
       </table>
 
       <p style="margin:24px 0 0;font-size:12px;color:#adb5bd;line-height:1.6;">' . $rodape . '</p>
